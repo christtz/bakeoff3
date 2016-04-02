@@ -1,6 +1,8 @@
 import java.util.ArrayList;
 import java.util.Collections;
 
+import java.lang.Math;
+
 int index = 0;
 
 //your input code should modify these!!
@@ -19,6 +21,9 @@ boolean userDone = false;
 
 final int screenPPI = 120; //what is the DPI of the screen you are using
 //Many phones listed here: https://en.wikipedia.org/wiki/Comparison_of_high-definition_smartphone_displays 
+
+final float root2 = (float) Math.sqrt(2);
+boolean closeEnough = false;
 
 private class Target
 {
@@ -61,7 +66,7 @@ void setup() {
 }
 
 void draw() {
-
+  
   background(60); //background is dark grey
   fill(200);
   noStroke();
@@ -89,7 +94,12 @@ void draw() {
   translate(screenTransX, screenTransY); //center the drawing coordinates to the center of the screen
 
   rotate(radians(t.rotation));
-
+  
+  if (closeEnough) stroke(0, 255, 0);
+  else stroke(255, 255, 255);
+  noFill();
+  ellipse(0, 0, root2*t.z, root2*t.z);
+  noStroke();
   fill(255, 0, 0); //set color to semi translucent
   rect(0, 0, t.z, t.z);
 
@@ -103,8 +113,14 @@ void draw() {
   //custom shifts:
   //translate(screenTransX,screenTransY); //center the drawing coordinates to the center of the screen
 
+  if (closeEnough) stroke(0, 255, 0);
+  else stroke(255, 255, 255);
+  noFill();
+  ellipse(0, 0, root2*screenZ, root2*screenZ);
+  noStroke();
   fill(255, 128); //set color to semi translucent
   rect(0, 0, screenZ, screenZ);
+  
 
   popMatrix();
 
@@ -159,6 +175,8 @@ void scaffoldControlLogic()
 
 void mouseReleased()
 {
+  check();
+  
   //check to see if user clicked middle of screen
   if (dist(width/2, height/2, mouseX, mouseY)<inchesToPixels(.5f))
   {
@@ -167,6 +185,7 @@ void mouseReleased()
 
     //and move on to next trial
     trialIndex++;
+    closeEnough = false;
 
     screenTransX = 0;
     screenTransY = 0;
@@ -181,15 +200,25 @@ void mouseReleased()
 
 public boolean checkForSuccess()
 {
-	Target t = targets.get(trialIndex);	
-	boolean closeDist = dist(t.x,t.y,-screenTransX,-screenTransY)<inchesToPixels(.05f); //has to be within .1"
-    boolean closeRotation = calculateDifferenceBetweenAngles(t.rotation,screenRotation)<=5;
-	boolean closeZ = abs(t.z - screenZ)<inchesToPixels(.05f); //has to be within .1"	
-	println("Close Enough Distance: " + closeDist);
-    println("Close Enough Rotation: " + closeRotation + "(dist="+calculateDifferenceBetweenAngles(t.rotation,screenRotation)+")");
-	println("Close Enough Z: " + closeZ);
-	
-	return closeDist && closeRotation && closeZ;	
+  Target t = targets.get(trialIndex);  
+  boolean closeDist = dist(t.x,t.y,-screenTransX,-screenTransY)<inchesToPixels(.05f); //has to be within .1"
+  boolean closeRotation = calculateDifferenceBetweenAngles(t.rotation,screenRotation)<=5;
+  boolean closeZ = abs(t.z - screenZ)<inchesToPixels(.05f); //has to be within .1"  
+  println("Close Enough Distance: " + closeDist);
+  println("Close Enough Rotation: " + closeRotation + "(dist="+calculateDifferenceBetweenAngles(t.rotation,screenRotation)+")");
+  println("Close Enough Z: " + closeZ);
+  
+  return closeDist && closeRotation && closeZ;  
+}
+
+public void check() 
+{
+  Target t = targets.get(trialIndex);  
+  boolean closeDist = dist(t.x,t.y,-screenTransX,-screenTransY)<inchesToPixels(.05f); //has to be within .1"
+  boolean closeRotation = calculateDifferenceBetweenAngles(t.rotation,screenRotation)<=5;
+  boolean closeZ = abs(t.z - screenZ)<inchesToPixels(.05f); //has to be withi  
+ 
+  closeEnough = closeDist && closeRotation && closeZ;  
 }
 
 double calculateDifferenceBetweenAngles(float a1, float a2)
