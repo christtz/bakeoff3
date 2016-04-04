@@ -58,6 +58,7 @@ private class Slider
     //translate(this.translateX, this.translateY); // it's dumb that this doesn't work properly
     noStroke();
     fill(255,200);
+    if (this.attribute == "rotation" && calculateDifferenceBetweenAngles(currentTarget.rotation,screenRotation)<=5) fill(0,255,0,200);
     this.x = width/2;
     if (this.attribute == "rotation") this.y = height/7;
     else this.y = height/4;
@@ -110,6 +111,7 @@ private class SliderBar
     noStroke();
     if (this.target) fill(255, 200);
     else fill(255,0,0,200);
+    if (this.attribute == "rotation" && calculateDifferenceBetweenAngles(currentTarget.rotation,screenRotation)<=5) fill(0,255,0,200);
     //System.out.println(this.x + " " +  this.y);
     if (this.attribute == "rotation") this.y = height/7; // I shouldn't need to define these again, but I do...
     else this.y = height/4;
@@ -254,7 +256,7 @@ void draw() {
   
   // If it has been dragged, we don't want to reset it to its previous position
   if (!rotationCurrent.dragged) rotationCurrent.x = normalizedLocation(t.rotation);
-  //System.out.println("rotation: " + t.rotation);
+  System.out.println("rotation: " + t.rotation);
   rotationCurrent.drawSliderBar();
   scaleTarget.drawSliderBar();
   scaleCurrent.drawSliderBar();
