@@ -33,44 +33,44 @@ private class Target
 
 int sliderHeight = 10; // these should change according to screen size
 int sliderWidth = 200;
-int sliderBarWidth = 10;
+int sliderBarWidth = 20;
 int sliderBarHeight = 50;
 
 private class Slider
 {
   //int translateX;
   //int translateY; 
-  int x;
-  int y;
+  int x = 0;
+  int y = 0;
   String attribute;
+  //boolean hovered;
+  //boolean selected;
   
   Slider(String attribute)
   {
-    //this.translateX = x;
-    //this.translateY = y;
     this.attribute = attribute;
   }
   
   public void drawSlider()
   {
-    pushMatrix();
-    if (this.attribute == "rotation")
-    {
-      translate(width/2, height/7); // magic numbers
-      this.x = width/2 - sliderWidth/2;
-      this.y = height/7 - sliderHeight/2;
-    }
-    else 
-    {
-      translate(width/2, height/4);
-      this.x = width/2 - sliderWidth/2;
-      this.y = height/4 - sliderHeight/2;
-    }
+    //pushMatrix();
+    //translate(0,0);
     //translate(this.translateX, this.translateY); // it's dumb that this doesn't work properly
     noStroke();
     fill(255,128);
-    rect(0, 0, sliderWidth, sliderHeight);
-    popMatrix();
+    this.x = width/2;
+    if (this.attribute == "rotation") this.y = height/7;
+    else this.y = height/4;
+    
+    rect(this.x, this.y, sliderWidth, sliderHeight);
+    //popMatrix();
+  }
+  
+  // I have no idea why this.x references the CENTER of the rectangle
+  public boolean containsMouse()
+  {
+    return (mouseX >= this.x + sliderBarWidth/2 - sliderWidth/2 && mouseX <= this.x + sliderWidth/2 - sliderBarWidth/2 &&
+       mouseY >= this.y - sliderHeight/2 - sliderBarHeight/2 && mouseY <= this.y + sliderHeight/2 + sliderBarHeight/2);
   }
 }
 
@@ -78,42 +78,46 @@ private class SliderBar
 {
   int x = 0;
   int y = 0;
+  //int translatedX = 0;
+  //int translatedY = 0;
   String attribute;
   boolean target;
+  //boolean hovered = false;
+  //boolean selected = false;
   
   SliderBar(String attribute, boolean target)
   {
     this.attribute = attribute;
     this.target = target;
+    this.x = width/2;
+    if (this.attribute == "rotation") this.y = height/7;
+    else this.y = height/4;
   }
   
-  SliderBar(String attribute, boolean target, int x) // perhaps won't use this constructor
-  {
-    this.attribute = attribute;
-    this.target = target;
-    this.x = x;
-  }
+  //SliderBar(String attribute, boolean target, int x) // perhaps won't use this constructor
+  //{
+  //  this.attribute = attribute;
+  //  this.target = target;
+  //  this.x = x;
+  //}
   
   public void drawSliderBar()
   {
-    pushMatrix();
-    if (this.attribute == "rotation")
-    {
-      translate(width/2, height/7); // magic numbers
-      this.x = width/2 - sliderBarWidth/2;
-      this.y = height/7 - sliderBarHeight/2;
-    }
-    else 
-    {
-      translate(width/2, height/4);
-      this.x = width/2 - sliderBarWidth/2;
-      this.y = height/4 - sliderBarHeight/2;
-    }
+    //pushMatrix();
     noStroke();
     if (this.target) fill(255, 128);
     else fill(255,0,0,128);
+    System.out.println(this.x + " " +  this.y);
+    if (this.attribute == "rotation") this.y = height/7; // I shouldn't need to define these again, but I do...
+    else this.y = height/4;
     rect(this.x, this.y, sliderBarWidth, sliderBarHeight);
-    popMatrix();
+    //popMatrix();
+  }
+  
+  public boolean containsMouse()
+  {
+    return (mouseX >= this.x - sliderBarWidth/2 && mouseX <= this.x + sliderBarWidth/2 &&
+       mouseY >= this.y - sliderBarHeight/2 && mouseY <= this.y + sliderBarHeight/2);
   }
     
 }
@@ -123,7 +127,7 @@ SliderBar rotationTarget = new SliderBar("rotation", true);
 SliderBar rotationCurrent = new SliderBar("rotation", false);
 Slider scaleSlider = new Slider("scale");
 SliderBar scaleTarget = new SliderBar("scale", true);
-SliderBar scaleCurrent = new SliderBar("rotation", false);
+SliderBar scaleCurrent = new SliderBar("scale", false);
 
 
 //private class TargetCircle
@@ -189,6 +193,9 @@ void draw() {
   background(60); //background is dark grey
   fill(200);
   noStroke();
+  
+  //System.out.println(mouseX);
+  //System.out.println(mouseY);
 
   if (startTime == 0)
     startTime = millis();
@@ -236,13 +243,14 @@ void draw() {
   
   //popMatrix();
   
-  //============DRAW ROTATION LINE==============
   rotationSlider.drawSlider();
   scaleSlider.drawSlider();
   rotationTarget.drawSliderBar();
-  //rotationCurrent
+  rotationCurrent.drawSliderBar();
   scaleTarget.drawSliderBar();
-  System.out.println(rotationSlider.x);
+  scaleCurrent.drawSliderBar();
+  fill(255);
+  //rect(rotationCurrent.x, rotationCurrent.y, 50,50);
   
   
   //===========DRAW TARGET SQUARE================= (do last so it doesn't get overlapped)
@@ -259,6 +267,29 @@ void draw() {
   scaffoldControlLogic(); //you are going to want to replace this!
 
   text("Trial " + (trialIndex+1) + " of " +trialCount, width/2, inchesToPixels(.5f));
+}
+
+void mousePressed()
+{
+
+}
+
+void mouseDragged()
+{
+
+  int difference = mouseX - pmouseX;
+  if (rotationSlider.containsMouse()) 
+  {
+    rotationCurrent.x = mouseX;
+    //rotationCurrent.x += difference;
+    System.out.println("yay");
+  }
+  //if (scaleSlider.selected) scaleSlider.x += difference;
+  //if (rotationTarget.selected) rotationTarget.x += difference;
+  //if (rotationCurrent.selected) rotationCurrent.x += difference;
+  //if (scaleTarget.selected) scaleTarget.x += difference;
+  //if (scaleCurrent.selected) scaleCurrent.x += difference;
+  
 }
 
 void scaffoldControlLogic()
@@ -308,6 +339,15 @@ void scaffoldControlLogic()
 
 void mouseReleased()
 {
+  // deselect everything
+  //rotationSlider.selected = false;
+  //scaleSlider.selected = false;
+  //rotationTarget.selected = false;
+  //rotationCurrent.selected = false;
+  //scaleTarget.selected = false;
+  //scaleCurrent.selected = false;
+  
+  
   //check to see if user clicked middle of screen
   if (dist(width/2, height/2, mouseX, mouseY)<inchesToPixels(.5f))
   {
