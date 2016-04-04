@@ -29,6 +29,26 @@ private class Target
   float y = 0;
   float rotation = 0;
   float z = 0;
+  boolean dragged = false;
+  
+  public boolean containsMouse()
+  {
+    /*
+    translate(width/2, height/2); //center the drawing coordinates to the center of the screen
+    translate(t.x, t.y); //center the drawing coordinates to the center of the screen
+    translate(screenTransX, screenTransY);
+    */
+    // correct for translations
+    float xmin = width/2 + this.x + screenTransX - this.z/2;
+    float xmax = width/2 + this.x + screenTransX + this.z/2;
+    float ymin = height/2 + this.y + screenTransY - this.z/2;
+    float ymax = height/2 + this.y + screenTransY + this.z/2;
+    
+    boolean value = (mouseX >= xmin && mouseX <= xmax && mouseY >= ymin && mouseY <= ymax);
+    //System.out.println(value);
+    return value;
+    //return (mouseX >= this.x - this.z/2 && mouseX <= this.x + this.z/2 && mouseY >= this.y - this.z/2 && mouseY <= this.y + this.z/2);
+  }
 }
 
 int sliderHeight = 10; // these should change according to screen size
@@ -130,6 +150,21 @@ private class SliderBar
   }
     
 }
+
+//private class CurrentCircle
+//{
+//  public void drawCircle()
+//  {
+//    // 
+//    if (closeEnough) stroke(0, 255, 0);
+//  else stroke(255, 255, 255);
+//  noFill();
+//  ellipse(0, 0, root2*t.z, root2*t.z);
+//  noStroke();
+//  fill(255, 0, 0); //set color to semi translucent
+//  rect(0, 0, t.z, t.z);
+//  }
+//}
 
 Slider rotationSlider = new Slider("rotation");
 SliderBar rotationTarget = new SliderBar("rotation", true);
@@ -251,13 +286,14 @@ void draw() {
   //rect(rotationCurrent.x, rotationCurrent.y, 50,50);
   
   
-  //===========DRAW TARGET SQUARE================= (do last so it doesn't get overlapped)
+  //===========DRAW TARGET SQUARE================= (do last so it doesn't get overlapped [that is not super important])
   pushMatrix();
   translate(width/2, height/2); //center the drawing coordinates to the center of the screen
   translate(t.x, t.y); //center the drawing coordinates to the center of the screen
   translate(screenTransX, screenTransY); //center the drawing coordinates to the center of the screen
   rotate(radians(t.rotation));
-  fill(255, 0, 0); //set color to semi translucent
+  if (dist(t.x,t.y,-screenTransX,-screenTransY)<inchesToPixels(0.05f)) fill(0,255,0,200);
+  else fill(255, 0, 0); //set color to semi translucent
   rect(0, 0, t.z, t.z);
   popMatrix();
   
@@ -323,13 +359,24 @@ void mouseDragged()
 
 void mouseHandling()
 {
-  if (rotationSlider.containsMouse()) 
+  // give the square preference as it may overlap sliders
+  if (currentTarget.containsMouse())
+  {
+    //float xmin = width/2 + this.x + screenTransX - this.z/2;
+    //float xmax = width/2 + this.x + screenTransX + this.z/2;
+    //float ymin = height/2 + this.y + screenTransY - this.z/2;
+    //float ymax = height/2 + this.y + screenTransY + this.z/2;
+    currentTarget.dragged = true;
+    screenTransX = mouseX - width/2 - currentTarget.x;// - screenTransX + currentTarget.z/2;
+    screenTransY = mouseY - height/2 - currentTarget.y;// - screenTransY + currentTarget.z/2;
+  }
+  else if (rotationSlider.containsMouse()) 
   {
     rotationCurrent.dragged = true;
     rotationCurrent.x = mouseX;
     currentTarget.rotation = normalizedRotation();
   }
-  if (scaleSlider.containsMouse())
+  else if (scaleSlider.containsMouse())
   {
     scaleCurrent.dragged = true;
     scaleCurrent.x = mouseX;
