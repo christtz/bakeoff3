@@ -84,6 +84,7 @@ private class SliderBar
   boolean target;
   //boolean hovered = false;
   //boolean selected = false;
+  boolean dragged = false;
   
   SliderBar(String attribute, boolean target)
   {
@@ -109,7 +110,7 @@ private class SliderBar
     noStroke();
     if (this.target) fill(255, 200);
     else fill(255,0,0,200);
-    System.out.println(this.x + " " +  this.y);
+    //System.out.println(this.x + " " +  this.y);
     if (this.attribute == "rotation") this.y = height/7; // I shouldn't need to define these again, but I do...
     else this.y = height/4;
     rect(this.x, this.y, sliderBarWidth, sliderBarHeight);
@@ -159,6 +160,7 @@ SliderBar scaleCurrent = new SliderBar("scale", false);
 //TargetCircle targetCircle = new TargetCircle();
 
 ArrayList<Target> targets = new ArrayList<Target>();
+Target currentTarget;
 
 float inchesToPixels(float inch)
 {
@@ -212,6 +214,7 @@ void draw() {
   }
   
   Target t = targets.get(trialIndex);
+  currentTarget = t;
 
   //===========DRAW TARGETTING SQUARE=================
   pushMatrix();
@@ -248,6 +251,10 @@ void draw() {
   rotationSlider.drawSlider();
   scaleSlider.drawSlider();
   rotationTarget.drawSliderBar();
+  
+  // If it has been dragged, we don't want to reset it to its previous position
+  if (!rotationCurrent.dragged) rotationCurrent.x = normalizedLocation(t.rotation);
+  //System.out.println("rotation: " + t.rotation);
   rotationCurrent.drawSliderBar();
   scaleTarget.drawSliderBar();
   scaleCurrent.drawSliderBar();
@@ -271,6 +278,21 @@ void draw() {
   text("Trial " + (trialIndex+1) + " of " +trialCount, width/2, inchesToPixels(.5f));
 }
 
+// Finds a reasonable rotationCurrent.x value
+int normalizedLocation(float rotation)
+{
+  float delta = (rotation - 180) / 180;
+  return int(rotationTarget.x + delta * sliderWidth / 2);
+}
+
+// Find a reasonable currentTarget.rotation value
+float normalizedRotation()
+{
+  float delta = mouseX - rotationTarget.x;
+  return delta / (sliderWidth / 2) * 180 + 180;
+  
+}
+
 void mousePressed()
 {
 
@@ -282,9 +304,15 @@ void mouseDragged()
   int difference = mouseX - pmouseX;
   if (rotationSlider.containsMouse()) 
   {
+    rotationCurrent.dragged = true;
     rotationCurrent.x = mouseX;
+    currentTarget.rotation = normalizedRotation();
+    // if moving left, increase angle
+    //if (difference < 0) currentTarget.rotation++;
+    //else currentTarget.rotation--;
+    
     //rotationCurrent.x += difference;
-    System.out.println("yay");
+    //System.out.println("yay" + mouseX);
   }
   //if (scaleSlider.selected) scaleSlider.x += difference;
   //if (rotationTarget.selected) rotationTarget.x += difference;
@@ -353,6 +381,10 @@ void mouseReleased()
   //check to see if user clicked middle of screen
   if (dist(width/2, height/2, mouseX, mouseY)<inchesToPixels(.5f))
   {
+    // reset slider drag values
+    rotationCurrent.dragged = false;
+    scaleCurrent.dragged = false;
+    
     if (userDone==false && !checkForSuccess())
       errorCount++;
 
