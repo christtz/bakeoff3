@@ -20,7 +20,7 @@ boolean userDone = false;
 final int screenPPI = 120; //what is the DPI of the screen you are using
 //Many phones listed here: https://en.wikipedia.org/wiki/Comparison_of_high-definition_smartphone_displays 
 
-int phoneWidth = 400; // these may change
+int phoneWidth = 400; // need to compute and then set size.x to this manually
 int phoneHeight = 700;
 
 private class Target
@@ -57,7 +57,7 @@ private class Slider
     //translate(0,0);
     //translate(this.translateX, this.translateY); // it's dumb that this doesn't work properly
     noStroke();
-    fill(255,128);
+    fill(255,200);
     this.x = width/2;
     if (this.attribute == "rotation") this.y = height/7;
     else this.y = height/4;
@@ -67,7 +67,7 @@ private class Slider
   }
   
   // I have no idea why this.x references the CENTER of the rectangle
-  public boolean containsMouse()
+  public boolean containsMouse() // padded out to sliderBarHeight
   {
     return (mouseX >= this.x + sliderBarWidth/2 - sliderWidth/2 && mouseX <= this.x + sliderWidth/2 - sliderBarWidth/2 &&
        mouseY >= this.y - sliderHeight/2 - sliderBarHeight/2 && mouseY <= this.y + sliderHeight/2 + sliderBarHeight/2);
@@ -89,7 +89,9 @@ private class SliderBar
   {
     this.attribute = attribute;
     this.target = target;
-    this.x = width/2;
+    this.x = phoneWidth/2; // width and height are currently undefined
+    // width and height go to a default if referenced before size() is called in setup
+    // that's the case here because I create my objects before setup gets called (I guess?)
     if (this.attribute == "rotation") this.y = height/7;
     else this.y = height/4;
   }
@@ -105,8 +107,8 @@ private class SliderBar
   {
     //pushMatrix();
     noStroke();
-    if (this.target) fill(255, 128);
-    else fill(255,0,0,128);
+    if (this.target) fill(255, 200);
+    else fill(255,0,0,200);
     System.out.println(this.x + " " +  this.y);
     if (this.attribute == "rotation") this.y = height/7; // I shouldn't need to define these again, but I do...
     else this.y = height/4;
@@ -114,7 +116,7 @@ private class SliderBar
     //popMatrix();
   }
   
-  public boolean containsMouse()
+  public boolean containsMouse() // don't need this; covered by SliderBar area + padding
   {
     return (mouseX >= this.x - sliderBarWidth/2 && mouseX <= this.x + sliderBarWidth/2 &&
        mouseY >= this.y - sliderBarHeight/2 && mouseY <= this.y + sliderBarHeight/2);
@@ -242,7 +244,7 @@ void draw() {
   ////targetCircle.drawCircle(t.rotation);
   
   //popMatrix();
-  
+  fill(255);
   rotationSlider.drawSlider();
   scaleSlider.drawSlider();
   rotationTarget.drawSliderBar();
