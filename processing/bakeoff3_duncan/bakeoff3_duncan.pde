@@ -59,6 +59,7 @@ private class Slider
     noStroke();
     fill(255,200);
     if (this.attribute == "rotation" && calculateDifferenceBetweenAngles(currentTarget.rotation,screenRotation)<=5) fill(0,255,0,200);
+    if (this.attribute == "scale" && abs(currentTarget.z - screenZ)<inchesToPixels(0.05f)) fill(0,255,0,200);
     this.x = width/2;
     if (this.attribute == "rotation") this.y = height/7;
     else this.y = height/4;
@@ -112,9 +113,12 @@ private class SliderBar
     if (this.target) fill(255, 200);
     else fill(255,0,0,200);
     if (this.attribute == "rotation" && calculateDifferenceBetweenAngles(currentTarget.rotation,screenRotation)<=5) fill(0,255,0,200);
+    if (this.attribute == "scale" && abs(currentTarget.z - screenZ)<inchesToPixels(0.05f)) fill(0,255,0,200);
     //System.out.println(this.x + " " +  this.y);
     if (this.attribute == "rotation") this.y = height/7; // I shouldn't need to define these again, but I do...
     else this.y = height/4;
+    
+    if (this.attribute == "scale" && this.target) this.x = normalizedScaleLocation(screenZ);
     rect(this.x, this.y, sliderBarWidth, sliderBarHeight);
     //popMatrix();
   }
@@ -230,33 +234,16 @@ void draw() {
   rect(0, 0, screenZ, screenZ);
 
   popMatrix();
-  
-  //============DRAW ROTATION GUIDE=================
-  //pushMatrix();
-  //translate(width/2, height/2);
-  //strokeWeight(3);
-  //stroke(255, 128);
-  //noFill();
-  //ellipse(0, 0, width/2, width/2);
-  
-  //// draw targetting circle
-  //noStroke();
-  //fill(0,255,0, 200);
-  //ellipse(width/4, 0, 30, 30);
-  
-  //// draw target circle
-  ////fill(255,0,0, 200);
-  ////targetCircle.drawCircle(t.rotation);
-  
-  //popMatrix();
+
   fill(255);
   rotationSlider.drawSlider();
   scaleSlider.drawSlider();
   rotationTarget.drawSliderBar();
   
   // If it has been dragged, we don't want to reset it to its previous position
-  if (!rotationCurrent.dragged) rotationCurrent.x = normalizedLocation(t.rotation);
-  System.out.println("rotation: " + t.rotation);
+  if (!rotationCurrent.dragged) rotationCurrent.x = normalizedRotationLocation(t.rotation);
+  if (!scaleCurrent.dragged) scaleCurrent.x = normalizedScaleLocation(currentTarget.z);
+  //System.out.println("rotation: " + t.rotation);
   rotationCurrent.drawSliderBar();
   scaleTarget.drawSliderBar();
   scaleCurrent.drawSliderBar();
@@ -281,7 +268,8 @@ void draw() {
 }
 
 // Finds a reasonable rotationCurrent.x value
-int normalizedLocation(float rotation)
+// Note: some extremes are buggy
+int normalizedRotationLocation(float rotation)
 {
   float delta = (rotation - 180) / 180;
   return int(rotationTarget.x + delta * sliderWidth / 2);
@@ -291,37 +279,62 @@ int normalizedLocation(float rotation)
 float normalizedRotation()
 {
   float delta = mouseX - rotationTarget.x;
-  return delta / (sliderWidth / 2) * 180 + 180;
+  return delta / (sliderWidth / 2) * 90 + 90; // use 180 instead of 90 to show multiple targets
+}
+
+// scale is not normalized relative to target
+int normalizedScaleLocation(float z)
+{
+  // ((i%20)+1)*inchesToPixels(.15f); // targetting
+  // left: 0.15f
+  // right: 3.00f
+  //float minZ = inchesToPixels(0.15f);
+  float maxZ = inchesToPixels(3f);
   
+  // refer to scaleSlider, not scaleCurrent
+  float delta = z / maxZ;
+  int value = int(scaleSlider.x - (sliderWidth / 2) + delta * sliderWidth);
+  return value;
+}
+
+float normalizedScale()
+{
+  float delta = mouseX - scaleSlider.x + sliderWidth/2;
+  return delta / sliderWidth * inchesToPixels(3f);
 }
 
 void mousePressed()
 {
-
+  mouseHandling();
 }
 
 void mouseDragged()
 {
 
   int difference = mouseX - pmouseX;
-  if (rotationSlider.containsMouse()) 
-  {
-    rotationCurrent.dragged = true;
-    rotationCurrent.x = mouseX;
-    currentTarget.rotation = normalizedRotation();
-    // if moving left, increase angle
-    //if (difference < 0) currentTarget.rotation++;
-    //else currentTarget.rotation--;
-    
-    //rotationCurrent.x += difference;
-    //System.out.println("yay" + mouseX);
-  }
+  mouseHandling();
   //if (scaleSlider.selected) scaleSlider.x += difference;
   //if (rotationTarget.selected) rotationTarget.x += difference;
   //if (rotationCurrent.selected) rotationCurrent.x += difference;
   //if (scaleTarget.selected) scaleTarget.x += difference;
   //if (scaleCurrent.selected) scaleCurrent.x += difference;
   
+}
+
+void mouseHandling()
+{
+  if (rotationSlider.containsMouse()) 
+  {
+    rotationCurrent.dragged = true;
+    rotationCurrent.x = mouseX;
+    currentTarget.rotation = normalizedRotation();
+  }
+  if (scaleSlider.containsMouse())
+  {
+    scaleCurrent.dragged = true;
+    scaleCurrent.x = mouseX;
+    currentTarget.z = normalizedScale();
+  }
 }
 
 void scaffoldControlLogic()
