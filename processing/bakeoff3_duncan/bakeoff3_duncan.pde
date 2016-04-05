@@ -441,7 +441,7 @@ void mouseReleased()
   
   
   //check to see if user clicked middle of screen
-  if (dist(width/2, height/2, mouseX, mouseY)<inchesToPixels(.5f))
+  if (dist(width/2, height/2, mouseX, mouseY)<inchesToPixels(.5f) && checkForSuccess())
   {
     // reset slider drag values
     rotationCurrent.dragged = false;
