@@ -341,7 +341,7 @@ float normalizedScale()
 
 void mousePressed()
 {
-  mouseHandling();
+  //mouseHandling();
 }
 
 void mouseDragged()
