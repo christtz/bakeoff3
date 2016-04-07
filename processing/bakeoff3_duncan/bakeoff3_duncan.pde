@@ -73,9 +73,6 @@ private class Slider
   
   public void drawSlider()
   {
-    //pushMatrix();
-    //translate(0,0);
-    //translate(this.translateX, this.translateY); // it's dumb that this doesn't work properly
     noStroke();
     fill(255,200);
     if (this.attribute == "rotation" && calculateDifferenceBetweenAngles(currentTarget.rotation,screenRotation)<=5) fill(0,255,0,200);
@@ -85,10 +82,8 @@ private class Slider
     else this.y = height/4;
     
     rect(this.x, this.y, sliderWidth, sliderHeight);
-    //popMatrix();
   }
   
-  // I have no idea why this.x references the CENTER of the rectangle
   public boolean containsMouse() // padded out to sliderBarHeight
   {
     return (mouseX >= this.x + sliderBarWidth/2 - sliderWidth/2 && mouseX <= this.x + sliderWidth/2 - sliderBarWidth/2 &&
@@ -119,16 +114,8 @@ private class SliderBar
     else this.y = height/4;
   }
   
-  //SliderBar(String attribute, boolean target, int x) // perhaps won't use this constructor
-  //{
-  //  this.attribute = attribute;
-  //  this.target = target;
-  //  this.x = x;
-  //}
-  
   public void drawSliderBar()
   {
-    //pushMatrix();
     noStroke();
     if (this.target) fill(255, 200);
     else fill(255,0,0,200);
@@ -140,7 +127,6 @@ private class SliderBar
     
     if (this.attribute == "scale" && this.target) this.x = normalizedScaleLocation(screenZ);
     rect(this.x, this.y, sliderBarWidth, sliderBarHeight);
-    //popMatrix();
   }
   
   public boolean containsMouse() // don't need this; covered by SliderBar area + padding
@@ -151,21 +137,6 @@ private class SliderBar
     
 }
 
-//private class CurrentCircle
-//{
-//  public void drawCircle()
-//  {
-//    // 
-//    if (closeEnough) stroke(0, 255, 0);
-//  else stroke(255, 255, 255);
-//  noFill();
-//  ellipse(0, 0, root2*t.z, root2*t.z);
-//  noStroke();
-//  fill(255, 0, 0); //set color to semi translucent
-//  rect(0, 0, t.z, t.z);
-//  }
-//}
-
 Slider rotationSlider = new Slider("rotation");
 SliderBar rotationTarget = new SliderBar("rotation", true);
 SliderBar rotationCurrent = new SliderBar("rotation", false);
@@ -173,32 +144,8 @@ Slider scaleSlider = new Slider("scale");
 SliderBar scaleTarget = new SliderBar("scale", true);
 SliderBar scaleCurrent = new SliderBar("scale", false);
 
-
-//private class TargetCircle
-//{
-//  float x = width/4;
-//  float y = 0;
-//  float diameter = 30;
-//  float rotation;
-  
-//  public void drawCircle(float rotation)
-//  {
-//    this.x = width/4*cos(rotation);
-//    this.y = width/4*sin(rotation);
-//    this.rotation = rotation;
-    
-//    fill(255,0,0, 200);
-//    ellipse(this.x, this.y, diameter, diameter);
-//    rotate(this.rotation);
-//    rect(this.x, this.y, diameter/2, diameter*2);
-    
-//  }
-//}
-
 //https://amnonp5.wordpress.com/2012/01/28/25-life-saving-tips-for-processing/
 // ^ #17 shows math to find if mouse is over a circle
-
-//TargetCircle targetCircle = new TargetCircle();
 
 ArrayList<Target> targets = new ArrayList<Target>();
 Target currentTarget;
