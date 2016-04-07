@@ -52,8 +52,8 @@ private class Target
 }
 
 int sliderHeight = 10; // these should change according to screen size
-int sliderWidth = 200;
-int sliderBarWidth = 20;
+int sliderWidth = 160;
+int sliderBarWidth = 40;
 int sliderBarHeight = 50;
 
 private class Slider
@@ -317,13 +317,13 @@ void mouseHandling()
     screenTransX = mouseX - width/2 - currentTarget.x;// - screenTransX + currentTarget.z/2;
     screenTransY = mouseY - height/2 - currentTarget.y;// - screenTransY + currentTarget.z/2;
   }
-  else if (rotationSlider.containsMouse()) 
+  else if (rotationCurrent.containsMouse()) 
   {
     rotationCurrent.dragged = true;
     rotationCurrent.x = mouseX;
     currentTarget.rotation = normalizedRotation();
   }
-  else if (scaleSlider.containsMouse())
+  else if (scaleCurrent.containsMouse())
   {
     scaleCurrent.dragged = true;
     scaleCurrent.x = mouseX;
