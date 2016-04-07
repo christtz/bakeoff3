@@ -328,6 +328,12 @@ void mouseHandling()
     scaleCurrent.dragged = true;
     scaleCurrent.x = mouseX;
     currentTarget.z = normalizedScale();
+  } 
+  else if (scaleTarget.containsMouse())
+  {
+    scaleTarget.dragged = true;
+    scaleTarget.x = mouseX;
+    screenZ = normalizedScale();
   }
 }
 
