@@ -9,7 +9,7 @@ float screenTransY = 0;
 float screenRotation = 0;
 float screenZ = 50f;
 
-int trialCount = 20; //this will be set higher for the bakeoff
+int trialCount = 10; //this will be set higher for the bakeoff
 float border = 0; //have some padding from the sides
 int trialIndex = 0;
 int errorCount = 0;  
@@ -92,14 +92,14 @@ private class ScaleSliderBar
     this.target = target;
   }
   
-  private int findScaleHeight()
+  private void findScaleHeight()
   {
     float delta;
     float range = (scaleSliderHeight - sliderBarWidth);
     if (this.target) delta = screenZ / inchesToPixels(2.85f);
     else delta = currentTarget.z / inchesToPixels(2.85f);
     int value = int(currentScaleSlider.y - range/2 + delta * range);
-    return value;
+    this.y = value;
   }
   
   public void draw()
@@ -111,7 +111,7 @@ private class ScaleSliderBar
     if (abs(currentTarget.z - screenZ)<inchesToPixels(0.05f)) fill(0,255,0,200);
     if (this.target) this.x = targetScaleSlider.x;
     else this.x = currentScaleSlider.x;
-    if (!this.dragged) this.y = this.findScaleHeight();
+    if (!this.dragged) this.findScaleHeight();
     rect(this.x, this.y, sliderBarHeight, sliderBarWidth);
     //sop(this.y);
   }
@@ -404,14 +404,16 @@ void mouseHandling()
   else if (currentScaleSliderBar.containsMouse() && withinSliderRange(currentScaleSlider))
   {
     currentScaleSliderBar.dragged = true;
-    currentScaleSliderBar.y = mouseY;
-    currentTarget.z = normalizedScale();
+    currentScaleSliderBar.y = mouseY+2; // this is the only place addressing the pixel issue works. ugh
+    currentTarget.z = normalizedScale(); 
+    sop("target: "+targetScaleSliderBar.y+", current: "+currentScaleSliderBar.y);
   } 
   else if (targetScaleSliderBar.containsMouse() && withinSliderRange(targetScaleSlider)) 
   {
-   System.out.println("target z: "+screenZ);
+   //System.out.println("target z: "+screenZ);
    targetScaleSliderBar.dragged = true;
    targetScaleSliderBar.y = mouseY;
+   
    screenZ = normalizedScale();
   }
 }
