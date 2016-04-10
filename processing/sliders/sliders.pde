@@ -156,9 +156,8 @@ private class RotationSlider
 float normalizedRotation() // it's here because I don't want to scroll down to it
 {
   float range = (sliderWidth - sliderBarWidth);
-  float delta = (mouseX - pmouseX) / range;
-  //float delta = dist(mouseX, 0, rotationTarget.x - range/2, 0) / range;
-  sop(currentTarget.rotation);
+  float delta = (mouseX - pmouseX) / range; // can't calculate using difference since it'll never go to the same values
+  //float delta = dist(mouseX, 0, rotationSlider.x - range/2, 0) / range;  sop(currentTarget.rotation);
   return (currentTarget.rotation + delta * 90);
 }
 
@@ -195,8 +194,9 @@ private class RotationSliderBar
   
   private void normalizedRotationLocation()
   {
+    currentTarget.rotation %= 90;
     float range = (sliderWidth - sliderBarWidth);
-    float delta = currentTarget.rotation%90 / 90;
+    float delta = currentTarget.rotation / 90.0;
     float loc = rotationSlider.x - range/2 + delta * range;
     //float delta = (currentTarget.rotation - 360) / 360;
     //float loc = rotationSlider.x + delta * range/2;
