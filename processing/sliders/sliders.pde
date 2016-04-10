@@ -45,9 +45,7 @@ private class Target
     float ymax = height/2 + this.y + screenTransY + this.z/2;
     
     boolean value = (mouseX >= xmin && mouseX <= xmax && mouseY >= ymin && mouseY <= ymax);
-    //System.out.println(value);
     return value;
-    //return (mouseX >= this.x - this.z/2 && mouseX <= this.x + this.z/2 && mouseY >= this.y - this.z/2 && mouseY <= this.y + this.z/2);
   }
 }
 
@@ -67,9 +65,6 @@ private class ScaleSlider
   ScaleSlider(boolean target)
   {
     this.target = target;
-    //if (target) this.x = width/4;
-    //else this.x = width*3/4;
-    //this.y = height/4;
   }
   
   public void draw()
@@ -129,31 +124,18 @@ private class ScaleSliderBar
 } 
 
 
-private class Slider
+private class RotationSlider
 {
-  //int translateX;
-  //int translateY; 
   int x = 0;
   int y = 0;
-  String attribute;
-  //boolean hovered;
-  //boolean selected;
   
-  Slider(String attribute)
-  {
-    this.attribute = attribute;
-  }
-  
-  public void drawSlider()
+  public void draw()
   {
     noStroke();
     fill(255,200);
-    if (this.attribute == "rotation" && calculateDifferenceBetweenAngles(currentTarget.rotation,screenRotation)<=5) fill(0,255,0,200);
-    if (this.attribute == "scale" && abs(currentTarget.z - screenZ)<inchesToPixels(0.05f)) fill(0,255,0,200);
+    if (calculateDifferenceBetweenAngles(currentTarget.rotation,screenRotation)<=5) fill(0,255,0,200);
     this.x = width/2;
-    if (this.attribute == "rotation") this.y = height/7;
-    else this.y = height/4;
-    
+    this.y = height/7;    
     rect(this.x, this.y, sliderWidth, sliderHeight);
   }
   
@@ -164,49 +146,27 @@ private class Slider
   }
 }
 
-private class SliderBar
+private class RotationSliderBar
 {
   int x = 0;
   int y = 0;
-  //int translatedX = 0;
-  //int translatedY = 0;
-  String attribute;
   boolean target;
-  //boolean hovered = false;
-  //boolean selected = false;
   boolean dragged = false;
   
-  SliderBar(String attribute, boolean target)
+  RotationSliderBar(boolean target)
   {
-    this.attribute = attribute;
     this.target = target;
     this.x = phoneWidth/2; // width and height are currently undefined
-    // width and height go to a default if referenced before size() is called in setup
-    // that's the case here because I create my objects before setup gets called (I guess?)
-    if (this.attribute == "rotation") this.y = height/7;
-    else this.y = height/4;
   }
   
-  public void drawSliderBar()
+  public void draw()
   {
     noStroke();
     if (this.target) fill(255, 200);
     else fill(255,0,0,200);
-    if (this.attribute == "rotation" && calculateDifferenceBetweenAngles(currentTarget.rotation,screenRotation)<=5) fill(0,255,0,200);
-    if (this.attribute == "scale" && abs(currentTarget.z - screenZ)<inchesToPixels(0.05f)) fill(0,255,0,200);
-    //System.out.println(this.x + " " +  this.y);
-    if (this.attribute == "rotation") this.y = height/7; // I shouldn't need to define these again, but I do...
-    else this.y = height/4;
-    
-    //if (this.attribute == "scale" && this.target) this.x = normalizedScaleLocation(screenZ); 
-    //{
-    //  if (this.target) this.x = normalizedScaleLocation(screenZ);
-    //  else this.x = normalizedRotationLocation(currentTarget.z);
-    //}
-    //else if (this.attribute == "rotation") 
-    //{
-    //  if (!this.target) this.x = normalizedRotationLocation(currentTarget.rotation);
-    //}
+    if (calculateDifferenceBetweenAngles(currentTarget.rotation,screenRotation)<=5) fill(0,255,0,200);
+    if (!this.target && !this.dragged) this.x = normalizedRotationLocation(currentTarget.rotation);
+    this.y = height/7;
     rect(this.x, this.y, sliderBarWidth, sliderBarHeight);
   }
   
@@ -218,16 +178,13 @@ private class SliderBar
     
 }
 
-Slider    rotationSlider  = new Slider("rotation");
-SliderBar rotationTarget  = new SliderBar("rotation", true);
-SliderBar rotationCurrent = new SliderBar("rotation", false);
-Slider    scaleSlider     = new Slider("scale");
+RotationSlider    rotationSlider  = new RotationSlider();
+RotationSliderBar rotationTarget  = new RotationSliderBar(true);
+RotationSliderBar rotationCurrent = new RotationSliderBar(false);
 ScaleSlider targetScaleSlider = new ScaleSlider(true);
 ScaleSlider currentScaleSlider = new ScaleSlider(false);
 ScaleSliderBar targetScaleSliderBar = new ScaleSliderBar(true);
 ScaleSliderBar currentScaleSliderBar = new ScaleSliderBar(false);
-SliderBar scaleTarget     = new SliderBar("scale", true);
-SliderBar scaleCurrent    = new SliderBar("scale", false);
 
 //https://amnonp5.wordpress.com/2012/01/28/25-life-saving-tips-for-processing/
 // ^ #17 shows math to find if mouse is over a circle
@@ -303,16 +260,13 @@ void draw() {
   popMatrix();
 
   fill(255);
-  rotationSlider.drawSlider();
+  rotationSlider.draw();
   targetScaleSlider.draw();
   currentScaleSlider.draw();
   targetScaleSliderBar.draw();
   currentScaleSliderBar.draw();
-  rotationTarget.drawSliderBar();
-  
-  // If it has been dragged, we don't want to reset it to its previous position
-  if (!rotationCurrent.dragged) rotationCurrent.x = normalizedRotationLocation(t.rotation);
-  rotationCurrent.drawSliderBar();
+  rotationTarget.draw();  
+  rotationCurrent.draw();
   fill(255);  
   
   //===========DRAW TARGET SQUARE=================
@@ -360,7 +314,8 @@ void mousePressed() // for testing purposes
   {
     // reset slider drag values
     rotationCurrent.dragged = false;
-    scaleCurrent.dragged = false;
+    targetScaleSliderBar.dragged = false;
+    currentScaleSliderBar.dragged = false;
     
     if (userDone==false && !checkForSuccess())
       errorCount++;
@@ -426,7 +381,7 @@ void mouseHandling()
   }
 }
 
-boolean withinSliderRange(Slider slider)
+boolean withinSliderRange(RotationSlider slider)
 {
   return (mouseX >= slider.x - (sliderWidth - sliderBarWidth)/2 && mouseX <= slider.x + (sliderWidth - sliderBarWidth)/2);
 }
