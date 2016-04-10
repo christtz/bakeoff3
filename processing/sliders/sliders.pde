@@ -53,8 +53,81 @@ private class Target
 
 int sliderHeight = 10; // these should change according to screen size
 int sliderWidth = 160;
+int scaleSliderHeight = 100;
+int scaleSliderWidth = 10;
 int sliderBarWidth = 40;
 int sliderBarHeight = 50;
+
+private class ScaleSlider
+{
+  boolean target;
+  int x;
+  int y;
+  
+  ScaleSlider(boolean target)
+  {
+    this.target = target;
+    //if (target) this.x = width/4;
+    //else this.x = width*3/4;
+    //this.y = height/4;
+  }
+  
+  public void draw()
+  {
+    noStroke();
+    fill(255,200);
+    if (this.target) this.x = int(width/2 - width/8);
+    else this.x = int(width/2 + width/8);
+    this.y = int(height/3.5);
+    // acceptable zone
+    if (abs(currentTarget.z - screenZ)<inchesToPixels(0.05f)) fill(0,255,0,200);
+    rect(this.x, this.y, scaleSliderWidth, scaleSliderHeight);
+  }
+}
+
+private class ScaleSliderBar
+{
+  boolean target;
+  boolean dragged = false;
+  int x;
+  int y;
+  
+  ScaleSliderBar(boolean target)
+  {
+    this.target = target;
+  }
+  
+  private int findScaleHeight()
+  {
+    float delta;
+    float range = (scaleSliderHeight - sliderBarWidth);
+    if (this.target) delta = screenZ / inchesToPixels(2.85f);
+    else delta = currentTarget.z / inchesToPixels(2.85f);
+    int value = int(currentScaleSlider.y - range/2 + delta * range);
+    return value;
+  }
+  
+  public void draw()
+  {
+    noStroke();
+    if (this.target) fill(255, 200);
+    else fill(255,0,0,200);
+    // within acceptable zone
+    if (abs(currentTarget.z - screenZ)<inchesToPixels(0.05f)) fill(0,255,0,200);
+    if (this.target) this.x = targetScaleSlider.x;
+    else this.x = currentScaleSlider.x;
+    if (!this.dragged) this.y = this.findScaleHeight();
+    rect(this.x, this.y, sliderBarHeight, sliderBarWidth);
+    //sop(this.y);
+  }
+  
+  public boolean containsMouse()
+  {
+    return (mouseX >= this.x - sliderBarHeight/2 && mouseX <= this.x + sliderBarHeight/2 &&
+       mouseY >= this.y - sliderBarWidth/2 && mouseY <= this.y + sliderBarWidth/2);
+  }
+} 
+
 
 private class Slider
 {
@@ -125,15 +198,15 @@ private class SliderBar
     if (this.attribute == "rotation") this.y = height/7; // I shouldn't need to define these again, but I do...
     else this.y = height/4;
     
-    if (this.attribute == "scale") 
-    {
-      if (this.target) this.x = normalizedScaleLocation(screenZ);
-      else this.x = normalizedRotationLocation(currentTarget.z);
-    }
-    else if (this.attribute == "rotation") 
-    {
-      if (!this.target) this.x = normalizedRotationLocation(currentTarget.rotation);
-    }
+    //if (this.attribute == "scale" && this.target) this.x = normalizedScaleLocation(screenZ); 
+    //{
+    //  if (this.target) this.x = normalizedScaleLocation(screenZ);
+    //  else this.x = normalizedRotationLocation(currentTarget.z);
+    //}
+    //else if (this.attribute == "rotation") 
+    //{
+    //  if (!this.target) this.x = normalizedRotationLocation(currentTarget.rotation);
+    //}
     rect(this.x, this.y, sliderBarWidth, sliderBarHeight);
   }
   
@@ -145,12 +218,16 @@ private class SliderBar
     
 }
 
-Slider rotationSlider = new Slider("rotation");
-SliderBar rotationTarget = new SliderBar("rotation", true);
+Slider    rotationSlider  = new Slider("rotation");
+SliderBar rotationTarget  = new SliderBar("rotation", true);
 SliderBar rotationCurrent = new SliderBar("rotation", false);
-Slider scaleSlider = new Slider("scale");
-SliderBar scaleTarget = new SliderBar("scale", true);
-SliderBar scaleCurrent = new SliderBar("scale", false);
+Slider    scaleSlider     = new Slider("scale");
+ScaleSlider targetScaleSlider = new ScaleSlider(true);
+ScaleSlider currentScaleSlider = new ScaleSlider(false);
+ScaleSliderBar targetScaleSliderBar = new ScaleSliderBar(true);
+ScaleSliderBar currentScaleSliderBar = new ScaleSliderBar(false);
+SliderBar scaleTarget     = new SliderBar("scale", true);
+SliderBar scaleCurrent    = new SliderBar("scale", false);
 
 //https://amnonp5.wordpress.com/2012/01/28/25-life-saving-tips-for-processing/
 // ^ #17 shows math to find if mouse is over a circle
@@ -227,21 +304,18 @@ void draw() {
 
   fill(255);
   rotationSlider.drawSlider();
-  scaleSlider.drawSlider();
+  targetScaleSlider.draw();
+  currentScaleSlider.draw();
+  targetScaleSliderBar.draw();
+  currentScaleSliderBar.draw();
   rotationTarget.drawSliderBar();
   
   // If it has been dragged, we don't want to reset it to its previous position
   if (!rotationCurrent.dragged) rotationCurrent.x = normalizedRotationLocation(t.rotation);
-  if (!scaleCurrent.dragged) scaleCurrent.x = normalizedScaleLocation(currentTarget.z);
-  //System.out.println("rotation: " + t.rotation);
   rotationCurrent.drawSliderBar();
-  scaleTarget.drawSliderBar();
-  scaleCurrent.drawSliderBar();
-  fill(255);
-  //rect(rotationCurrent.x, rotationCurrent.y, 50,50);
+  fill(255);  
   
-  
-  //===========DRAW TARGET SQUARE================= (do last so it doesn't get overlapped [that is not super important])
+  //===========DRAW TARGET SQUARE=================
   pushMatrix();
   translate(width/2, height/2); //center the drawing coordinates to the center of the screen
   translate(t.x, t.y); //center the drawing coordinates to the center of the screen
@@ -253,7 +327,7 @@ void draw() {
   popMatrix();
   
   fill(255);
-  text("Trial " + (trialIndex+1) + " of " +trialCount, width/2, inchesToPixels(.5f));
+  text("Trial " + (trialIndex+1) + " of " +trialCount, width/2, inchesToPixels(.25f));
 }
 
 // Finds a reasonable rotationCurrent.x value
@@ -263,7 +337,7 @@ int normalizedRotationLocation(float rotation)
   float delta = (rotation - 180) / 180;
   float loc = rotationTarget.x + delta * (sliderWidth - sliderBarWidth)/2;
   
-  System.out.println("rotation: "+rotation+", delta: "+delta+", location: "+loc+"location int: "+int(loc));
+  //System.out.println("rotation: "+rotation+", delta: "+delta+", location: "+loc+"location int: "+int(loc));
   return int(loc);
 }
 
@@ -271,34 +345,15 @@ int normalizedRotationLocation(float rotation)
 float normalizedRotation()
 {
   float delta = mouseX - rotationTarget.x;
-  System.out.println("rotation: "+currentTarget.rotation+" new rotation: "+delta / (sliderWidth / 2) * 90 + 90);
+  //System.out.println("rotation: "+currentTarget.rotation+" new rotation: "+delta / (sliderWidth / 2) * 90 + 90);
   return delta / (sliderWidth / 2) * 90 + 90; // use 180 instead of 90 to show multiple targets
 }
 
-// scale is not normalized relative to target
-int normalizedScaleLocation(float z)
-{
-  return int(scaleSlider.x - (sliderWidth)/2 + (z / inchesToPixels(3f)) * (sliderWidth - sliderBarWidth));
-  
-  // ((i%20)+1)*inchesToPixels(.15f); // targetting
-  // left: 0.15f
-  // right: 3.00f
-  //float minZ = inchesToPixels(0.15f);
-  //float maxZ = inchesToPixels(3f); // range is off. goes from 0..3f, should be 0.15f..3f
-  
-  //// refer to scaleSlider, not scaleCurrent
-  //float delta = z / maxZ;
-  //int value = int(scaleSlider.x - sliderWidth/2 + delta * (sliderWidth - sliderBarWidth) + sliderBarWidth/2);
-  //return value;
-}
+void sop(String stuff) { System.out.println(stuff); }
+void sop(int stuff) { System.out.println(stuff); }
+void sop(float stuff) { System.out.println(stuff); }
 
-float normalizedScale()
-{
-  float delta = mouseX - scaleSlider.x + sliderWidth/2;
-  return delta / sliderWidth * inchesToPixels(3f);
-}
-
-void mousePressed()
+void mousePressed() // for testing purposes
 {
   //mouseHandling();
   if (dist(width/2, height/2, mouseX, mouseY)<inchesToPixels(.5f))
@@ -325,17 +380,16 @@ void mousePressed()
   
 }
 
+float normalizedScale()
+{
+  float range = (scaleSliderHeight - sliderBarWidth);
+  float delta = (dist(mouseY, 0, targetScaleSlider.y - range/2, 0)) / range;
+  return delta * inchesToPixels(2.85f) + inchesToPixels(0.15f);
+}
+
 void mouseDragged()
 {
-
-  int difference = mouseX - pmouseX;
   mouseHandling();
-  //if (scaleSlider.selected) scaleSlider.x += difference;
-  //if (rotationTarget.selected) rotationTarget.x += difference;
-  //if (rotationCurrent.selected) rotationCurrent.x += difference;
-  //if (scaleTarget.selected) scaleTarget.x += difference;
-  //if (scaleCurrent.selected) scaleCurrent.x += difference;
-  
 }
 
 void mouseHandling()
@@ -357,43 +411,40 @@ void mouseHandling()
     rotationCurrent.x = mouseX;
     currentTarget.rotation = normalizedRotation();
   }
-  else if (scaleCurrent.containsMouse() && withinSliderRange(scaleSlider))
+  else if (currentScaleSliderBar.containsMouse() && withinSliderRange(currentScaleSlider))
   {
-    scaleCurrent.dragged = true;
-    scaleCurrent.x = mouseX;
+    currentScaleSliderBar.dragged = true;
+    currentScaleSliderBar.y = mouseY;
     currentTarget.z = normalizedScale();
   } 
-  else if (scaleTarget.containsMouse() && withinSliderRange(scaleSlider)) 
-  // if you drag this first and cross over scaleCurrent, scaleCurrent will take the drag due to conditional hierarchy
+  else if (targetScaleSliderBar.containsMouse() && withinSliderRange(targetScaleSlider)) 
   {
-    scaleTarget.dragged = true;
-    scaleTarget.x = mouseX;
-    screenZ = normalizedScale();
+   System.out.println("target z: "+screenZ);
+   targetScaleSliderBar.dragged = true;
+   targetScaleSliderBar.y = mouseY;
+   screenZ = normalizedScale();
   }
 }
 
 boolean withinSliderRange(Slider slider)
 {
-  return (mouseX > slider.x - (sliderWidth - sliderBarWidth)/2 && mouseX < slider.x + (sliderWidth - sliderBarWidth)/2);
+  return (mouseX >= slider.x - (sliderWidth - sliderBarWidth)/2 && mouseX <= slider.x + (sliderWidth - sliderBarWidth)/2);
+}
+
+boolean withinSliderRange(ScaleSlider slider)
+{
+  return (mouseY >= slider.y - (scaleSliderHeight - sliderBarWidth)/2 && mouseY <= slider.y + (scaleSliderHeight - sliderBarWidth)/2);
 }
 
 void mouseReleased()
 {
-  // deselect everything
-  //rotationSlider.selected = false;
-  //scaleSlider.selected = false;
-  //rotationTarget.selected = false;
-  //rotationCurrent.selected = false;
-  //scaleTarget.selected = false;
-  //scaleCurrent.selected = false;
-  
-  
   //check to see if user clicked middle of screen
   if (dist(width/2, height/2, mouseX, mouseY)<inchesToPixels(.5f) && checkForSuccess())
   {
     // reset slider drag values
     rotationCurrent.dragged = false;
-    scaleCurrent.dragged = false;
+    targetScaleSliderBar.dragged = false;
+    currentScaleSliderBar.dragged = false;
     
     if (userDone==false && !checkForSuccess())
       errorCount++;
