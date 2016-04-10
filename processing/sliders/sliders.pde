@@ -146,12 +146,23 @@ private class RotationSlider
   }
 }
 
+// Find a reasonable currentTarget.rotation value
+float normalizedRotation() // it's here because I don't want to scroll down to it
+{
+  float range = (sliderWidth - sliderBarWidth);
+  float delta = (mouseX - pmouseX) / range;
+  //float delta = dist(mouseX, 0, rotationTarget.x - range/2, 0) / range;
+  sop(currentTarget.rotation);
+  return (currentTarget.rotation + delta * 360);
+}
+
 private class RotationSliderBar
 {
   int x = 0;
   int y = 0;
   boolean target;
   boolean dragged = false;
+  boolean locked = false;
   
   RotationSliderBar(boolean target)
   {
@@ -160,11 +171,40 @@ private class RotationSliderBar
     //this.x = this.findTargetLocation();
   }
   
-  public int findTargetLocation()
+  //private void findTargetLocation()
+  //{
+  // //float delta = (originalRotation - 360) / 360;
+  // float difference = 90 - (originalRotation % 90); // how far away from a multiple of 90 it is
+  // int sign = 1;
+  // if (difference <= 45) sign = -1;
+  // float delta = (originalRotation + difference * sign) / 90;
+  // float range = sliderWidth - sliderBarWidth;
+  // float loc = rotationSlider.x - range/2 + delta * range/4; // relative to rotationSlider.x
+   
+   
+  // //this.x = int(rotationSlider.x + delta * range/2);
+  // this.x = int(loc); // misnomer
+  // sop("original: "+originalRotation+", target: "+currentTarget.rotation+", mod: "+difference*sign+", position: "+this.x);
+  //}
+  
+  private void normalizedRotationLocation()
   {
-   float ratio = (originalRotation % 90) / 90;
-   float range = sliderWidth - sliderBarWidth;
-   return int(rotationSlider.x - range/2 + ratio * range);
+    float range = (sliderWidth - sliderBarWidth);
+    float delta = currentTarget.rotation / 360;
+    float loc = rotationSlider.x - range/2 + delta * range;
+    //float delta = (currentTarget.rotation - 360) / 360;
+    //float loc = rotationSlider.x + delta * range/2;
+    this.x = int(loc);
+  }
+  
+  private int findScaleHeight()
+  {
+    float delta;
+    float range = (scaleSliderHeight - sliderBarWidth);
+    if (this.target) delta = screenZ / inchesToPixels(2.85f);
+    else delta = currentTarget.z / inchesToPixels(2.85f);
+    int value = int(currentScaleSlider.y - range/2 + delta * range);
+    return value;
   }
   
   public void draw()
@@ -172,9 +212,13 @@ private class RotationSliderBar
     noStroke();
     if (this.target) fill(255, 200);
     else fill(255,0,0,200);
-    if (!this.target && !this.dragged) this.x = normalizedRotationLocation(currentTarget.rotation);
-    if (this.target) this.x = this.findTargetLocation();
-    if (calculateDifferenceBetweenAngles(currentTarget.rotation,screenRotation)<=5) fill(0,255,0,200);
+    if (!this.target && !this.dragged) this.normalizedRotationLocation();
+    //if (this.target) this.findTargetLocation();
+    if (calculateDifferenceBetweenAngles(currentTarget.rotation,screenRotation)<=5) 
+    {
+      fill(0,255,0,200);
+      this.locked = true;
+    }
     this.y = height/7;
     rect(this.x, this.y, sliderBarWidth, sliderBarHeight);
   }
@@ -188,7 +232,7 @@ private class RotationSliderBar
 }
 
 RotationSlider    rotationSlider  = new RotationSlider();
-RotationSliderBar rotationTarget  = new RotationSliderBar(true);
+//RotationSliderBar rotationTarget  = new RotationSliderBar(true);
 RotationSliderBar rotationCurrent = new RotationSliderBar(false);
 ScaleSlider targetScaleSlider = new ScaleSlider(true);
 ScaleSlider currentScaleSlider = new ScaleSlider(false);
@@ -273,7 +317,7 @@ void draw() {
   currentScaleSlider.draw();
   targetScaleSliderBar.draw();
   currentScaleSliderBar.draw();
-  rotationTarget.draw();
+  //rotationTarget.draw();
   rotationCurrent.draw();
   fill(255);  
   
@@ -292,29 +336,6 @@ void draw() {
   text("Trial " + (trialIndex+1) + " of " +trialCount, width/2, inchesToPixels(.25f));
 }
 
-// Finds a reasonable rotationCurrent.x value
-int normalizedRotationLocation(float rotation)
-{
-  // need to find difference between target and current
-  //float difference = 90 - (rotation % 90);
-  //sop(difference);
-  float range = (sliderWidth - sliderBarWidth);
-  float delta = (rotation - 360) / 360;
-  float loc = rotationSlider.x + delta * range/2;
-  
-  return int(loc);
-}
-
-// Find a reasonable currentTarget.rotation value
-float normalizedRotation()
-{
-  sop(currentTarget.rotation);
-  float range = (sliderWidth - sliderBarWidth);
-  float delta = (mouseX - pmouseX) / range;
-  //float delta = dist(mouseX, 0, rotationTarget.x - range/2, 0) / range;
-  return (currentTarget.rotation + delta * 90);
-}
-
 void sop(String stuff) { System.out.println(stuff); }
 void sop(int stuff) { System.out.println(stuff); }
 void sop(float stuff) { System.out.println(stuff); }
@@ -322,29 +343,30 @@ void sop(float stuff) { System.out.println(stuff); }
 void mousePressed() // for testing purposes
 {
   //mouseHandling();
-  if (dist(width/2, height/2, mouseX, mouseY)<inchesToPixels(.5f))
-  {
-    // reset slider drag values
-    rotationCurrent.dragged = false;
-    targetScaleSliderBar.dragged = false;
-    currentScaleSliderBar.dragged = false;
-    originalRotation = -1000;
+  //if (dist(width/2, height/2, mouseX, mouseY)<inchesToPixels(.5f))
+  //{
+  //  // reset slider drag values
+  //  rotationCurrent.dragged = false;
+  //  targetScaleSliderBar.dragged = false;
+  //  currentScaleSliderBar.dragged = false;
+  //  originalRotation = -1000;
+  //  rotationCurrent.locked = false;
     
-    if (userDone==false && !checkForSuccess())
-      errorCount++;
+  //  if (userDone==false && !checkForSuccess())
+  //    errorCount++;
 
-    //and move on to next trial
-    trialIndex++;
+  //  //and move on to next trial
+  //  trialIndex++;
 
-    screenTransX = 0;
-    screenTransY = 0;
+  //  screenTransX = 0;
+  //  screenTransY = 0;
 
-    if (trialIndex==trialCount && userDone==false)
-    {
-      userDone = true;
-      finishTime = millis();
-    }
-  }
+  //  if (trialIndex==trialCount && userDone==false)
+  //  {
+  //    userDone = true;
+  //    finishTime = millis();
+  //  }
+  //}
   
 }
 
@@ -373,7 +395,7 @@ void mouseHandling()
     screenTransX = mouseX - width/2 - currentTarget.x;// - screenTransX + currentTarget.z/2;
     screenTransY = mouseY - height/2 - currentTarget.y;// - screenTransY + currentTarget.z/2;
   }
-  else if (rotationCurrent.containsMouse() && withinSliderRange(rotationSlider)) 
+  else if (rotationCurrent.containsMouse() && withinSliderRange(rotationSlider) && !rotationCurrent.locked) 
   {
     rotationCurrent.dragged = true;
     rotationCurrent.x = mouseX;
@@ -414,6 +436,7 @@ void mouseReleased()
     targetScaleSliderBar.dragged = false;
     currentScaleSliderBar.dragged = false;
     originalRotation = -1000;
+    rotationCurrent.locked = false;
     
     if (userDone==false && !checkForSuccess())
       errorCount++;
