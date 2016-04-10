@@ -160,13 +160,12 @@ private class RotationSliderBar
     //this.x = this.findTargetLocation();
   }
   
-  //public int findTargetLocation()
-  //{
-  //  float ratio = (currentTarget.rotation % 90) / 90;
-  //  float range = sliderWidth - sliderBarWidth;
-  //  return int(rotationSlider.x - range/2 + ratio * range);
-    
-  //}
+  public int findTargetLocation()
+  {
+   float ratio = (originalRotation % 90) / 90;
+   float range = sliderWidth - sliderBarWidth;
+   return int(rotationSlider.x - range/2 + ratio * range);
+  }
   
   public void draw()
   {
@@ -174,7 +173,7 @@ private class RotationSliderBar
     if (this.target) fill(255, 200);
     else fill(255,0,0,200);
     if (!this.target && !this.dragged) this.x = normalizedRotationLocation(currentTarget.rotation);
-    //if (this.target) this.x = this.findTargetLocation();
+    if (this.target) this.x = this.findTargetLocation();
     if (calculateDifferenceBetweenAngles(currentTarget.rotation,screenRotation)<=5) fill(0,255,0,200);
     this.y = height/7;
     rect(this.x, this.y, sliderBarWidth, sliderBarHeight);
@@ -201,7 +200,7 @@ ScaleSliderBar currentScaleSliderBar = new ScaleSliderBar(false);
 
 ArrayList<Target> targets = new ArrayList<Target>();
 Target currentTarget;
-//float originalRotation;
+float originalRotation = -1000; // arbitrary number to check against
 
 float inchesToPixels(float inch)
 {
@@ -253,6 +252,8 @@ void draw() {
   
   Target t = targets.get(trialIndex);
   currentTarget = t;
+  // set rotation targetting
+  if (originalRotation == -1000) originalRotation = t.rotation;
   //===========DRAW TARGETTING SQUARE=================
   pushMatrix();
   translate(width/2, height/2); //center the drawing coordinates to the center of the screen
@@ -327,6 +328,7 @@ void mousePressed() // for testing purposes
     rotationCurrent.dragged = false;
     targetScaleSliderBar.dragged = false;
     currentScaleSliderBar.dragged = false;
+    originalRotation = -1000;
     
     if (userDone==false && !checkForSuccess())
       errorCount++;
@@ -411,6 +413,7 @@ void mouseReleased()
     rotationCurrent.dragged = false;
     targetScaleSliderBar.dragged = false;
     currentScaleSliderBar.dragged = false;
+    originalRotation = -1000;
     
     if (userDone==false && !checkForSuccess())
       errorCount++;
