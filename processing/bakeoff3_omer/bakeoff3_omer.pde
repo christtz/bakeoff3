@@ -24,7 +24,17 @@ final int screenPPI = 120; //what is the DPI of the screen you are using
 final float root2 = (float) Math.sqrt(2);
 float xOffset = 0.0;  //used to get offset from target to mouse
 float yOffset = 0.0; 
+float prevRotation = 0.0; 
+float curRotation = 0.0;
+float rotationDiff = 0.0;
 boolean closeEnough = false;
+
+float circleDiameter = 50.0;
+float circleRadius = circleDiameter / 2;
+Corners corners;
+
+ArrayList<Target> targets = new ArrayList<Target>();
+Target currentTarget;
 
 private class Target
 {
@@ -32,9 +42,8 @@ private class Target
   float y = 0;
   float rotation = 0;
   float z = 0;
-  boolean dragged = false;
 
-   public boolean containsMouse()
+  public boolean containsMouse()
   {
     // correct for translations
     float xmin = width/2 + this.x + screenTransX - this.z/2;
@@ -47,8 +56,122 @@ private class Target
   }
 }
 
-ArrayList<Target> targets = new ArrayList<Target>();
-Target currentTarget;
+private class Corners
+{
+  Target ct;
+  float cx;
+  float cy;
+  float chypotenuse;
+
+  boolean onTopRight = false;
+  boolean onTopLeft = false;
+  boolean onBotLeft = false;
+  boolean onBotRight = false;
+
+  public float getOppCornerX() {
+    if (onTopRight)
+      return cx + chypotenuse * cos(radians(ct.rotation) + 3*PI/4);
+    else if (onTopLeft)
+      return cx + chypotenuse * cos(radians(ct.rotation) + PI/4);
+    else if (onBotLeft)
+      return cx + chypotenuse * cos(radians(ct.rotation) - PI/4);
+    else
+      return cx + chypotenuse * cos(radians(ct.rotation) - 3*PI/4);
+  }
+
+  public float getOppCornerY() {
+    if (onTopRight)
+      return cy + chypotenuse * sin(radians(ct.rotation) + 3*PI/4);
+    else if (onTopLeft)
+      return cy + chypotenuse * sin(radians(ct.rotation) + PI/4);
+    else if (onBotLeft)
+      return cy + chypotenuse * sin(radians(ct.rotation) - PI/4);
+    else
+      return cy + chypotenuse * sin(radians(ct.rotation) - 3*PI/4);
+  }
+
+  public boolean rotationActive()
+  {
+    return (onTopRight || onTopLeft || onBotLeft || onBotRight);
+  }
+
+  private void clearRotation()
+  {
+    onTopRight = false;
+    onTopLeft = false;
+    onBotLeft = false;
+    onBotRight = false;
+  }
+
+  public void setIfMouseOnCorner() {
+    // set target and center
+    ct = currentTarget;
+    cx = width/2 + ct.x + screenTransX;
+    cy = height/2 + ct.y + screenTransY; 
+    chypotenuse = dist(cx, cy, cx + ct.z/2, cy + ct.z/2);
+
+    mouseInTopRight();
+    mouseInTopLeft();
+    mouseInBotLeft();
+    mouseInBotRight();
+  }
+
+  public void mouseInTopRight()
+  { 
+    float resx = cx + chypotenuse * cos(radians(ct.rotation) - PI/4);
+    float resy = cy + chypotenuse * sin(radians(ct.rotation) - PI/4);
+    if (dist(resx, resy, mouseX, mouseY) < circleRadius)
+      onTopRight = true;
+  }
+
+  public void mouseInTopLeft()
+  { 
+    float resx = cx + chypotenuse * cos(radians(ct.rotation) - 3*PI/4);
+    float resy = cy + chypotenuse * sin(radians(ct.rotation) - 3*PI/4);
+    if (dist(resx, resy, mouseX, mouseY) < circleRadius)
+      onTopLeft = true;
+  }
+
+  public void mouseInBotLeft()
+  {   
+    float resx = cx + chypotenuse * cos(radians(ct.rotation) + 3*PI/4);
+    float resy = cy + chypotenuse * sin(radians(ct.rotation) + 3*PI/4);
+    if (dist(resx, resy, mouseX, mouseY) < circleRadius)
+      onBotLeft = true;
+  }
+
+  public void mouseInBotRight()
+  {  
+    float resx = cx + chypotenuse * cos(radians(ct.rotation) + PI/4);
+    float resy = cy + chypotenuse * sin(radians(ct.rotation) + PI/4);
+    if (dist(resx, resy, mouseX, mouseY) < circleRadius)
+      onBotRight = true;
+  }
+
+  void drawCornerCircles() {
+    // draw four corner starting from upper right clockwise
+    // if (closeEnough) stroke(0, 255, 0);
+    Target t = currentTarget;
+    stroke(255, 255, 255);
+
+    if (onTopLeft) fill(255, 255, 0);
+    else fill(0, 255, 255);
+    ellipse(-t.z/2, -t.z/2, circleDiameter, circleDiameter); // top right
+
+    if (onTopRight) fill(255, 255, 0);
+    else fill(0, 255, 255);
+    ellipse(t.z/2, -t.z/2, circleDiameter, circleDiameter); // top right
+
+    if (onBotLeft) fill(255, 255, 0);
+    else fill(0, 255, 255);
+    ellipse(-t.z/2, t.z/2, circleDiameter, circleDiameter); // top right
+
+    if (onBotRight) fill(255, 255, 0);
+    else fill(0, 255, 255);
+    ellipse(t.z/2, t.z/2, circleDiameter, circleDiameter); // top right
+
+  }
+}
 
 float inchesToPixels(float inch)
 {
@@ -69,15 +192,24 @@ void setup() {
   for (int i=0; i<trialCount; i++) //don't change this! 
   {
     Target t = new Target();
-    t.x = random(-width/2+border, width/2-border); //set a random x with some padding
-    t.y = random(-height/2+border, height/2-border); //set a random y with some padding
+    // t.x = random(-width/2+border, width/2-border); //set a random x with some padding
+    // t.y = random(-height/2+border, height/2-border); //set a random y with some padding
+    t.x = 0;
+    t.y = 0;
     t.rotation = random(0, 360); //random rotation between 0 and 360
     t.z = ((i%20)+1)*inchesToPixels(.15f); //increasing size from .15 up to 3.0"
     targets.add(t);
     println("created target with " + t.x + "," + t.y + "," + t.rotation + "," + t.z);
   }
-
   Collections.shuffle(targets); // randomize the order of the button; don't change this.
+
+  // custom setup work
+
+  Target t = targets.get(trialIndex);
+  corners = new Corners();
+  // initialize rotations
+  prevRotation = t.rotation;
+  curRotation = t.rotation;
 }
 
 void draw() {
@@ -101,25 +233,6 @@ void draw() {
   Target t = targets.get(trialIndex);
   currentTarget = t;
 
-  //===========DRAW TARGET SQUARE=================
-  pushMatrix();
-  translate(width/2, height/2); //center the drawing coordinates to the center of the screen
-
-
-  translate(t.x, t.y); //center the drawing coordinates to the center of the screen
-  translate(screenTransX, screenTransY); //center the drawing coordinates to the center of the screen
-  rotate(radians(t.rotation));
-  
-  // if (closeEnough) stroke(0, 255, 0);
-  // else stroke(255, 255, 255);
-  // noFill();
-  // ellipse(0, 0, root2*t.z, root2*t.z);
-  noStroke();
-  fill(255, 0, 0); //set color to semi translucent
-  rect(0, 0, t.z, t.z);
-
-  popMatrix();
-
   //===========DRAW TARGETTING SQUARE=================
   pushMatrix();
   translate(width/2, height/2); //center the drawing coordinates to the center of the screen
@@ -139,62 +252,75 @@ void draw() {
 
   popMatrix();
 
-  // scaffoldControlLogic(); //you are going to want to replace this!
+  //===========DRAW TARGET SQUARE=================
+  pushMatrix();
+
+  translate(width/2, height/2); //center the drawing coordinates to the center of the screen
+  translate(t.x, t.y); //center the drawing coordinates to the center of the screen
+  translate(screenTransX, screenTransY); //center the drawing coordinates to the center of the screen
+
+  // if (corners.rotationActive()) {
+  //   if (corners.onTopRight) 
+  //     rotateFromCorner(-t.z/2, t.z/2);
+  //   else if (corners.onTopLeft) 
+  //     rotateFromCorner(t.z/2, t.z/2);
+  //   else if (corners.onBotLeft) 
+  //     rotateFromCorner(t.z/2, -t.z/2);
+  //   else 
+  //     rotateFromCorner(-t.z/2, -t.z/2);
+  // } else {
+    rotate(radians(t.rotation));
+  // }
+  
+  // if (closeEnough) stroke(0, 255, 0);
+  // else stroke(255, 255, 255);
+  // noFill();
+  // ellipse(0, 0, root2*t.z, root2*t.z);
+  noStroke();
+  fill(255, 0, 0); //set color to semi translucent
+  rect(0, 0, t.z, t.z);
+  corners.drawCornerCircles();
+
+
+  popMatrix();
 
   text("Trial " + (trialIndex+1) + " of " +trialCount, width/2, inchesToPixels(.5f));
 }
 
-// void scaffoldControlLogic()
-// {
-//   //upper left corner, rotate counterclockwise
-//   text("CCW", inchesToPixels(.2f), inchesToPixels(.2f));
-//   if (mousePressed && dist(0, 0, mouseX, mouseY)<inchesToPixels(.5f))
-//     screenRotation--;
-
-//   //upper right corner, rotate clockwise
-//   text("CW", width-inchesToPixels(.2f), inchesToPixels(.2f));
-//   if (mousePressed && dist(width, 0, mouseX, mouseY)<inchesToPixels(.5f))
-//     screenRotation++;
-
-//   //lower left corner, decrease Z
-//   text("-", inchesToPixels(.2f), height-inchesToPixels(.2f));
-//   if (mousePressed && dist(0, height, mouseX, mouseY)<inchesToPixels(.5f))
-//     screenZ-=inchesToPixels(.02f);
-
-//   //lower right corner, increase Z
-//   text("+", width-inchesToPixels(.2f), height-inchesToPixels(.2f));
-//   if (mousePressed && dist(width, height, mouseX, mouseY)<inchesToPixels(.5f))
-//     screenZ+=inchesToPixels(.02f);
-
-//   //left middle, move left
-//   text("left", inchesToPixels(.2f), height/2);
-//   if (mousePressed && dist(0, height/2, mouseX, mouseY)<inchesToPixels(.5f))
-//     screenTransX-=inchesToPixels(.02f);
-//   ;
-
-//   text("right", width-inchesToPixels(.2f), height/2);
-//   if (mousePressed && dist(width, height/2, mouseX, mouseY)<inchesToPixels(.5f))
-//     screenTransX+=inchesToPixels(.02f);
-//   ;
-
-//   text("up", width/2, inchesToPixels(.2f));
-//   if (mousePressed && dist(width/2, 0, mouseX, mouseY)<inchesToPixels(.5f))
-//     screenTransY-=inchesToPixels(.02f);
-//   ;
-
-//   text("down", width/2, height-inchesToPixels(.2f));
-//   if (mousePressed && dist(width/2, height, mouseX, mouseY)<inchesToPixels(.5f))
-//     screenTransY+=inchesToPixels(.02f);
-//   ;
-// }
+void rotateFromCorner(float dx, float dy) {
+  translate(dx, dy);
+  rotate(radians(currentTarget.rotation));
+  translate(-dx, -dy);
+}
 
 void mousePressed(){
   xOffset = mouseX-screenTransX; 
   yOffset = mouseY-screenTransY; 
+
+  // keep track of rotation difference to keep refernce of where we drag from
+  corners.setIfMouseOnCorner();
+  if (corners.rotationActive())
+  {
+    curRotation = normalizedRotation();
+    rotationDiff = curRotation - prevRotation;
+    // println("mousePressed! curRotation is: "+ curRotation);
+    // println("prevRotation: "+prevRotation);
+    // println("rotationDiff: "+rotationDiff);
+    // println(" ");
+  }  
 }
 
 void mouseReleased(MouseEvent event)
 {
+  if (corners.rotationActive())
+  {
+      // save current rotation as previous
+      prevRotation = curRotation;
+      // println("End -> set prevRotation as: "+prevRotation);
+      // println(" ");
+  }
+  corners.clearRotation();
+
   check();
   
   //check to see if user clicked middle of screen
@@ -226,12 +352,32 @@ void mouseDragged() {
 void mouseHandling()
 {
   // give the square preference as it may overlap sliders
-  if (currentTarget.containsMouse())
+  if (corners.rotationActive())
   {
-    currentTarget.dragged = true;
-    screenTransX = mouseX - xOffset;// - screenTransX + currentTarget.z/2;
-    screenTransY = mouseY - yOffset;// - screenTransY + currentTarget.z/2;
+    curRotation = normalizedRotation() - rotationDiff;
+    // println("prevRotation: "+prevRotation);
+    // println("curRotation: "+curRotation);
+    // println("rotationDiff: "+rotationDiff);
+    currentTarget.rotation = curRotation;
+  } else if (currentTarget.containsMouse())
+  {
+    screenTransX = mouseX - xOffset;
+    screenTransY = mouseY - yOffset;
   }
+}
+
+// Find a reasonable currentTarget.rotation value
+float normalizedRotation()
+{
+  float curX = width/2 + currentTarget.x + screenTransX;
+  float curY = height/2 + currentTarget.y + screenTransY;
+  // float curX = corners.getOppCornerX();
+  // float curY = corners.getOppCornerY();
+
+  float angle = atan((mouseY - curY) / (mouseX - curX));
+  float rotation = angle * 180 / PI;
+
+  return rotation;
 }
 
 public boolean checkForSuccess()
