@@ -30,6 +30,7 @@ private class Target
   float rotation = 0;
   float z = 0;
   boolean dragged = false;
+  boolean locked = false;
   
   public boolean containsMouse()
   {
@@ -84,6 +85,7 @@ private class ScaleSliderBar
 {
   boolean target;
   boolean dragged = false;
+  boolean locked = false;
   int x;
   int y;
   
@@ -153,7 +155,7 @@ float normalizedRotation() // it's here because I don't want to scroll down to i
   float delta = (mouseX - pmouseX) / range;
   //float delta = dist(mouseX, 0, rotationTarget.x - range/2, 0) / range;
   sop(currentTarget.rotation);
-  return (currentTarget.rotation + delta * 360);
+  return (currentTarget.rotation + delta * 90);
 }
 
 private class RotationSliderBar
@@ -190,7 +192,7 @@ private class RotationSliderBar
   private void normalizedRotationLocation()
   {
     float range = (sliderWidth - sliderBarWidth);
-    float delta = currentTarget.rotation / 360;
+    float delta = currentTarget.rotation%90 / 90;
     float loc = rotationSlider.x - range/2 + delta * range;
     //float delta = (currentTarget.rotation - 360) / 360;
     //float loc = rotationSlider.x + delta * range/2;
@@ -217,7 +219,7 @@ private class RotationSliderBar
     if (calculateDifferenceBetweenAngles(currentTarget.rotation,screenRotation)<=5) 
     {
       fill(0,255,0,200);
-      this.locked = true;
+      //this.locked = true; // need to set it on mouse release
     }
     this.y = height/7;
     rect(this.x, this.y, sliderBarWidth, sliderBarHeight);
@@ -385,7 +387,7 @@ void mouseDragged()
 void mouseHandling()
 {
   // give the square preference as it may overlap sliders
-  if (currentTarget.containsMouse())
+  if (currentTarget.containsMouse() && !currentTarget.locked)
   {
     //float xmin = width/2 + this.x + screenTransX - this.z/2;
     //float xmax = width/2 + this.x + screenTransX + this.z/2;
@@ -401,14 +403,14 @@ void mouseHandling()
     rotationCurrent.x = mouseX;
     currentTarget.rotation = normalizedRotation();
   }
-  else if (currentScaleSliderBar.containsMouse() && withinSliderRange(currentScaleSlider))
+  else if (currentScaleSliderBar.containsMouse() && withinSliderRange(currentScaleSlider) && !currentScaleSliderBar.locked)
   {
     currentScaleSliderBar.dragged = true;
     currentScaleSliderBar.y = mouseY+2; // this is the only place addressing the pixel issue works. ugh
     currentTarget.z = normalizedScale(); 
     sop("target: "+targetScaleSliderBar.y+", current: "+currentScaleSliderBar.y);
   } 
-  else if (targetScaleSliderBar.containsMouse() && withinSliderRange(targetScaleSlider)) 
+  else if (targetScaleSliderBar.containsMouse() && withinSliderRange(targetScaleSlider) && !targetScaleSliderBar.locked) 
   {
    //System.out.println("target z: "+screenZ);
    targetScaleSliderBar.dragged = true;
@@ -430,6 +432,17 @@ boolean withinSliderRange(ScaleSlider slider)
 
 void mouseReleased()
 {
+  
+  // locking
+  if (calculateDifferenceBetweenAngles(currentTarget.rotation,screenRotation)<=5) rotationCurrent.locked = true;
+  if (dist(currentTarget.x,currentTarget.y,-screenTransX,-screenTransY)<inchesToPixels(0.05f)) currentTarget.locked = true;
+  if (abs(currentTarget.z - screenZ)<inchesToPixels(0.05f))
+  {
+    targetScaleSliderBar.locked = true;
+    currentScaleSliderBar.locked = true;
+  }
+  
+  // separate if than locking
   if (checkForSuccess())
   {
     // reset slider drag values
@@ -438,6 +451,9 @@ void mouseReleased()
     currentScaleSliderBar.dragged = false;
     originalRotation = -1000;
     rotationCurrent.locked = false;
+    currentTarget.locked = false;
+    targetScaleSliderBar.locked = false;
+    currentScaleSliderBar.locked = false;
     
     if (userDone==false && !checkForSuccess())
       errorCount++;
