@@ -219,7 +219,6 @@ private class RotationSliderBar
 }
 
 RotationSlider    rotationSlider  = new RotationSlider();
-//RotationSliderBar rotationTarget  = new RotationSliderBar(true);
 RotationSliderBar rotationCurrent = new RotationSliderBar(false);
 ScaleSlider targetScaleSlider = new ScaleSlider(true);
 ScaleSlider currentScaleSlider = new ScaleSlider(false);
@@ -385,7 +384,7 @@ void mouseHandling()
   else if (rotationCurrent.containsMouse() && withinSliderRange(rotationSlider) && !rotationCurrent.locked) 
   {
     rotationCurrent.dragged = true;
-    rotationCurrent.x = mouseX;
+    rotationCurrent.x += (mouseX - pmouseX);
     currentTarget.rotation = normalizedRotation();
   }
   else if (currentScaleSliderBar.containsMouse() && withinSliderRange(currentScaleSlider) && !currentScaleSliderBar.locked)
