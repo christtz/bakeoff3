@@ -227,9 +227,6 @@ void draw() {
   background(60); //background is dark grey
   fill(200);
   noStroke();
-  
-  //System.out.println(mouseX);
-  //System.out.println(mouseY);
 
   if (startTime == 0)
     startTime = millis();
@@ -285,22 +282,23 @@ void draw() {
 }
 
 // Finds a reasonable rotationCurrent.x value
-// Note: some extremes are buggy
 int normalizedRotationLocation(float rotation)
 {
-  float delta = (rotation - 180) / 180;
-  float loc = rotationTarget.x + delta * (sliderWidth - sliderBarWidth)/2;
   
-  //System.out.println("rotation: "+rotation+", delta: "+delta+", location: "+loc+"location int: "+int(loc));
+  float range = (sliderWidth - sliderBarWidth);
+  float delta = (rotation - 180) / 180;
+  float loc = rotationTarget.x + delta * range/2;
+  
   return int(loc);
 }
 
 // Find a reasonable currentTarget.rotation value
 float normalizedRotation()
 {
-  float delta = mouseX - rotationTarget.x;
-  //System.out.println("rotation: "+currentTarget.rotation+" new rotation: "+delta / (sliderWidth / 2) * 90 + 90);
-  return delta / (sliderWidth / 2) * 90 + 90; // use 180 instead of 90 to show multiple targets
+  sop(currentTarget.rotation);
+  float range = (sliderWidth - sliderBarWidth);
+  float delta = (mouseX - rotationTarget.x - range/2) / range;
+  return delta * 90 + 45;
 }
 
 void sop(String stuff) { System.out.println(stuff); }
