@@ -139,8 +139,12 @@ private class RotationSlider
     this.x = width/2;
     this.y = height/7;    
     rect(this.x, this.y, sliderWidth, sliderHeight);
+    // draw the little slide markers
+    rect(this.x - sliderWidth/2 + 5/2, this.y, 5, sliderBarHeight);
+    rect(this.x + sliderWidth/2 - 5/2, this.y, 5, sliderBarHeight);
   }
   
+  // deprecated
   public boolean containsMouse() // padded out to sliderBarHeight
   {
     return (mouseX >= this.x + sliderBarWidth/2 - sliderWidth/2 && mouseX <= this.x + sliderWidth/2 - sliderBarWidth/2 &&
