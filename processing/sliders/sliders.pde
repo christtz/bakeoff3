@@ -157,15 +157,25 @@ private class RotationSliderBar
   {
     this.target = target;
     this.x = phoneWidth/2; // width and height are currently undefined
+    //this.x = this.findTargetLocation();
   }
+  
+  //public int findTargetLocation()
+  //{
+  //  float ratio = (currentTarget.rotation % 90) / 90;
+  //  float range = sliderWidth - sliderBarWidth;
+  //  return int(rotationSlider.x - range/2 + ratio * range);
+    
+  //}
   
   public void draw()
   {
     noStroke();
     if (this.target) fill(255, 200);
     else fill(255,0,0,200);
-    if (calculateDifferenceBetweenAngles(currentTarget.rotation,screenRotation)<=5) fill(0,255,0,200);
     if (!this.target && !this.dragged) this.x = normalizedRotationLocation(currentTarget.rotation);
+    //if (this.target) this.x = this.findTargetLocation();
+    if (calculateDifferenceBetweenAngles(currentTarget.rotation,screenRotation)<=5) fill(0,255,0,200);
     this.y = height/7;
     rect(this.x, this.y, sliderBarWidth, sliderBarHeight);
   }
@@ -191,6 +201,7 @@ ScaleSliderBar currentScaleSliderBar = new ScaleSliderBar(false);
 
 ArrayList<Target> targets = new ArrayList<Target>();
 Target currentTarget;
+//float originalRotation;
 
 float inchesToPixels(float inch)
 {
@@ -242,7 +253,6 @@ void draw() {
   
   Target t = targets.get(trialIndex);
   currentTarget = t;
-
   //===========DRAW TARGETTING SQUARE=================
   pushMatrix();
   translate(width/2, height/2); //center the drawing coordinates to the center of the screen
@@ -262,7 +272,7 @@ void draw() {
   currentScaleSlider.draw();
   targetScaleSliderBar.draw();
   currentScaleSliderBar.draw();
-  rotationTarget.draw();  
+  rotationTarget.draw();
   rotationCurrent.draw();
   fill(255);  
   
@@ -284,10 +294,12 @@ void draw() {
 // Finds a reasonable rotationCurrent.x value
 int normalizedRotationLocation(float rotation)
 {
-  
+  // need to find difference between target and current
+  //float difference = 90 - (rotation % 90);
+  //sop(difference);
   float range = (sliderWidth - sliderBarWidth);
-  float delta = (rotation - 180) / 180;
-  float loc = rotationTarget.x + delta * range/2;
+  float delta = (rotation - 360) / 360;
+  float loc = rotationSlider.x + delta * range/2;
   
   return int(loc);
 }
@@ -297,8 +309,9 @@ float normalizedRotation()
 {
   sop(currentTarget.rotation);
   float range = (sliderWidth - sliderBarWidth);
-  float delta = (mouseX - rotationTarget.x - range/2) / range;
-  return delta * 90 + 45;
+  float delta = (mouseX - pmouseX) / range;
+  //float delta = dist(mouseX, 0, rotationTarget.x - range/2, 0) / range;
+  return (currentTarget.rotation + delta * 90);
 }
 
 void sop(String stuff) { System.out.println(stuff); }
