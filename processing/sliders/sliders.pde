@@ -156,9 +156,8 @@ private class RotationSlider
 float normalizedRotation() // it's here because I don't want to scroll down to it
 {
   float range = (sliderWidth - sliderBarWidth);
-  float delta = (mouseX - pmouseX) / range; // can't calculate using difference since it'll never go to the same values
-  //float delta = dist(mouseX, 0, rotationSlider.x - range/2, 0) / range;  sop(currentTarget.rotation);
-  return (currentTarget.rotation + delta * 90);
+  float delta = (mouseX - rotationSlider.x + range/2) / range;
+  return (delta * 90);
 }
 
 private class RotationSliderBar
@@ -176,30 +175,12 @@ private class RotationSliderBar
     //this.x = this.findTargetLocation();
   }
   
-  //private void findTargetLocation()
-  //{
-  // //float delta = (originalRotation - 360) / 360;
-  // float difference = 90 - (originalRotation % 90); // how far away from a multiple of 90 it is
-  // int sign = 1;
-  // if (difference <= 45) sign = -1;
-  // float delta = (originalRotation + difference * sign) / 90;
-  // float range = sliderWidth - sliderBarWidth;
-  // float loc = rotationSlider.x - range/2 + delta * range/4; // relative to rotationSlider.x
-   
-   
-  // //this.x = int(rotationSlider.x + delta * range/2);
-  // this.x = int(loc); // misnomer
-  // sop("original: "+originalRotation+", target: "+currentTarget.rotation+", mod: "+difference*sign+", position: "+this.x);
-  //}
-  
   private void normalizedRotationLocation()
   {
     currentTarget.rotation %= 90;
     float range = (sliderWidth - sliderBarWidth);
     float delta = currentTarget.rotation / 90.0;
     float loc = rotationSlider.x - range/2 + delta * range;
-    //float delta = (currentTarget.rotation - 360) / 360;
-    //float loc = rotationSlider.x + delta * range/2;
     this.x = int(loc);
   }
   
