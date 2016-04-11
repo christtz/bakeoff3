@@ -17,11 +17,24 @@ int startTime = 0; // time starts when the first click is captured
 int finishTime = 0; //records the time of the final click
 boolean userDone = false;
 
-final int screenPPI = 120; //what is the DPI of the screen you are using
+final int screenPPI = 445; //what is the DPI of the screen you are using
 //Many phones listed here: https://en.wikipedia.org/wiki/Comparison_of_high-definition_smartphone_displays 
 
-int phoneWidth = 400; // need to compute and then set size.x to this manually
-int phoneHeight = 700;
+int phoneWidth = 900; // need to compute and then set size.x to this manually
+int phoneHeight = 1558;
+
+float inchesToPixels(float inch)
+{
+  return inch*screenPPI;
+}
+
+// these should change according to screen size
+float sliderHeight = 20; 
+float sliderWidth = inchesToPixels(1.6f);
+float scaleSliderHeight = inchesToPixels(1f);
+float scaleSliderWidth = 20;
+float sliderBarWidth = inchesToPixels(0.4f);
+float sliderBarHeight = inchesToPixels(0.5f);
 
 private class Target
 {
@@ -50,13 +63,6 @@ private class Target
   }
 }
 
-int sliderHeight = 10; // these should change according to screen size
-int sliderWidth = 160;
-int scaleSliderHeight = 100;
-int scaleSliderWidth = 10;
-int sliderBarWidth = 40;
-int sliderBarHeight = 50;
-
 private class ScaleSlider
 {
   boolean target;
@@ -72,9 +78,9 @@ private class ScaleSlider
   {
     noStroke();
     fill(255,200);
-    if (this.target) this.x = int(width/2 - width/8);
-    else this.x = int(width/2 + width/8);
-    this.y = int(height/3.5);
+    if (this.target) this.x = int(width/2 - width/7);
+    else this.x = int(width/2 + width/7);
+    this.y = int(height/3.6 + sliderBarWidth);
     // acceptable zone
     if (abs(currentTarget.z - screenZ)<inchesToPixels(0.05f)) fill(0,255,0,200);
     rect(this.x, this.y, scaleSliderWidth, scaleSliderHeight);
@@ -232,14 +238,9 @@ ArrayList<Target> targets = new ArrayList<Target>();
 Target currentTarget;
 float originalRotation = -1000; // arbitrary number to check against
 
-float inchesToPixels(float inch)
-{
-  return inch*screenPPI;
-}
-
 void setup() {
   //size does not let you use variables, so you have to manually compute this
-  size(400, 700); //set this, based on your sceen's PPI to be a 2x3.5" area.
+  size(900, 1558); //set this, based on your sceen's PPI to be a 2x3.5" area.
 
   rectMode(CENTER);
   textFont(createFont("Arial", inchesToPixels(.15f))); //sets the font to Arial that is .3" tall
@@ -286,7 +287,7 @@ void draw() {
   if (originalRotation == -1000) originalRotation = t.rotation;
   //===========DRAW TARGETTING SQUARE=================
   pushMatrix();
-  translate(width/2, height/2); //center the drawing coordinates to the center of the screen
+  translate(width/2, height*3/4); //center the drawing coordinates to the center of the screen (actually a bit lower)
   rotate(radians(screenRotation));
 
   //custom shifts:
@@ -313,7 +314,7 @@ void draw() {
   translate(t.x, t.y); //center the drawing coordinates to the center of the screen
   translate(screenTransX, screenTransY); //center the drawing coordinates to the center of the screen
   rotate(radians(t.rotation));
-  if (dist(t.x,t.y,-screenTransX,-screenTransY)<inchesToPixels(0.05f)) fill(0,255,0,200);
+  if (dist(t.x,t.y,-screenTransX,-screenTransY + height/4)<inchesToPixels(0.05f)) fill(0,255,0,200);
   else fill(255, 0, 0); //set color to semi translucent
   rect(0, 0, t.z, t.z);
   popMatrix();
@@ -419,7 +420,7 @@ void mouseReleased()
   
   // locking
   if (calculateDifferenceBetweenAngles(currentTarget.rotation,screenRotation)<=5) rotationCurrent.locked = true;
-  if (dist(currentTarget.x,currentTarget.y,-screenTransX,-screenTransY)<inchesToPixels(0.05f)) currentTarget.locked = true;
+  if (dist(currentTarget.x,currentTarget.y,-screenTransX,-screenTransY + height/4)<inchesToPixels(0.05f)) currentTarget.locked = true;
   if (abs(currentTarget.z - screenZ)<inchesToPixels(0.05f))
   {
     targetScaleSliderBar.locked = true;
@@ -459,11 +460,11 @@ void mouseReleased()
 public boolean checkForSuccess()
 {
 	Target t = targets.get(trialIndex);	
-	boolean closeDist = dist(t.x,t.y,-screenTransX,-screenTransY)<inchesToPixels(.05f); //has to be within .1"
-    boolean closeRotation = calculateDifferenceBetweenAngles(t.rotation,screenRotation)<=5;
+    boolean closeDist = dist(t.x,t.y,-screenTransX,-screenTransY + height/4)<inchesToPixels(.05f); //has to be within .1" // add height to support translation
+boolean closeRotation = calculateDifferenceBetweenAngles(t.rotation,screenRotation)<=5;
 	boolean closeZ = abs(t.z - screenZ)<inchesToPixels(.05f); //has to be within .1"	
 	println("Close Enough Distance: " + closeDist);
-    println("Close Enough Rotation: " + closeRotation + "(dist="+calculateDifferenceBetweenAngles(t.rotation,screenRotation)+")");
+  println("Close Enough Rotation: " + closeRotation + "(dist="+calculateDifferenceBetweenAngles(t.rotation,screenRotation)+")");
 	println("Close Enough Z: " + closeZ);
 	
 	return closeDist && closeRotation && closeZ;	
