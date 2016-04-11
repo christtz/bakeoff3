@@ -119,6 +119,7 @@ private class ScaleSliderBar
     if (this.target) fill(255, 200);
     else fill(255,0,0,200);
     // within acceptable zone
+    if (this.target) println("current TARGET.Z: " + currentTarget.z);
     if (abs(currentTarget.z - screenZ)<inchesToPixels(0.05f)) fill(0,255,0,200);
     if (this.target) this.x = targetScaleSlider.x;
     else this.x = currentScaleSlider.x;
@@ -367,7 +368,7 @@ float normalizedScale()
 {
   float range = (scaleSliderHeight - sliderBarWidth);
   float delta = (dist(mouseY, 0, targetScaleSlider.y - range/2, 0)) / range;
-  return delta * inchesToPixels(2.85f) + inchesToPixels(0.15f);
+  return delta * inchesToPixels(2.85f);
 }
 
 void mouseDragged()
@@ -398,6 +399,7 @@ void mouseHandling()
   {
     currentScaleSliderBar.dragged = true;
     currentScaleSliderBar.y = mouseY+2; // this is the only place addressing the pixel issue works. ugh
+    println("CURRENT TARGET Y normalizing:" + currentScaleSliderBar.y);
     currentTarget.z = normalizedScale(); 
     sop("target: "+targetScaleSliderBar.y+", current: "+currentScaleSliderBar.y);
   } 
