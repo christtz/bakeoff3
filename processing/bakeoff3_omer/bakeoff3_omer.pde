@@ -192,10 +192,8 @@ void setup() {
   for (int i=0; i<trialCount; i++) //don't change this! 
   {
     Target t = new Target();
-    // t.x = random(-width/2+border, width/2-border); //set a random x with some padding
-    // t.y = random(-height/2+border, height/2-border); //set a random y with some padding
-    t.x = 0;
-    t.y = 0;
+    t.x = random(-width/2+border, width/2-border); //set a random x with some padding
+    t.y = random(-height/2+border, height/2-border); //set a random y with some padding
     t.rotation = random(0, 360); //random rotation between 0 and 360
     t.z = ((i%20)+1)*inchesToPixels(.15f); //increasing size from .15 up to 3.0"
     targets.add(t);
@@ -258,10 +256,14 @@ void draw() {
   translate(width/2, height/2); //center the drawing coordinates to the center of the screen
   translate(t.x, t.y); //center the drawing coordinates to the center of the screen
   translate(screenTransX, screenTransY); //center the drawing coordinates to the center of the screen
+  noStroke();
+  fill(255, 0, 0); //set color to semi translucent
+  rotate(radians(t.rotation));
 
   // if (corners.rotationActive()) {
-  //   if (corners.onTopRight) 
-  //     rotateFromCorner(-t.z/2, t.z/2);
+  //   if (corners.onTopRight) {
+  //     holdCornerAndDraw(-t.z/2, t.z/2);
+  //   }
   //   else if (corners.onTopLeft) 
   //     rotateFromCorner(t.z/2, t.z/2);
   //   else if (corners.onBotLeft) 
@@ -269,17 +271,15 @@ void draw() {
   //   else 
   //     rotateFromCorner(-t.z/2, -t.z/2);
   // } else {
-    rotate(radians(t.rotation));
+  //   rect(0, 0, t.z, t.z);
   // }
-  
+
+  rect(0, 0, t.z, t.z);
+  corners.drawCornerCircles();
   // if (closeEnough) stroke(0, 255, 0);
   // else stroke(255, 255, 255);
   // noFill();
   // ellipse(0, 0, root2*t.z, root2*t.z);
-  noStroke();
-  fill(255, 0, 0); //set color to semi translucent
-  rect(0, 0, t.z, t.z);
-  corners.drawCornerCircles();
 
 
   popMatrix();
@@ -287,10 +287,9 @@ void draw() {
   text("Trial " + (trialIndex+1) + " of " +trialCount, width/2, inchesToPixels(.5f));
 }
 
-void rotateFromCorner(float dx, float dy) {
+void holdCornerAndDraw(float dx, float dy) {
   translate(dx, dy);
-  rotate(radians(currentTarget.rotation));
-  translate(-dx, -dy);
+  rect(-dx, -dy, currentTarget.z, currentTarget.z);
 }
 
 void mousePressed(){

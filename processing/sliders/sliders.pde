@@ -9,6 +9,9 @@ float screenTransY = 0;
 float screenRotation = 0;
 float screenZ = 50f;
 
+float xOffset = 0.0;  //used to get offset from target to mouse
+float yOffset = 0.0; 
+
 int trialCount = 10; //this will be set higher for the bakeoff
 float border = 0; //have some padding from the sides
 int trialIndex = 0;
@@ -329,6 +332,9 @@ void sop(float stuff) { System.out.println(stuff); }
 
 void mousePressed() // for testing purposes
 {
+
+  xOffset = mouseX-screenTransX; 
+  yOffset = mouseY-screenTransY; 
   //mouseHandling();
   //if (dist(width/2, height/2, mouseX, mouseY)<inchesToPixels(.5f))
   //{
@@ -379,8 +385,8 @@ void mouseHandling()
     //float ymin = height/2 + this.y + screenTransY - this.z/2;
     //float ymax = height/2 + this.y + screenTransY + this.z/2;
     currentTarget.dragged = true;
-    screenTransX = mouseX - width/2 - currentTarget.x;// - screenTransX + currentTarget.z/2;
-    screenTransY = mouseY - height/2 - currentTarget.y;// - screenTransY + currentTarget.z/2;
+    screenTransX = mouseX - xOffset;
+    screenTransY = mouseY - yOffset;
   }
   else if (rotationCurrent.containsMouse() && withinSliderRange(rotationSlider) && !rotationCurrent.locked) 
   {
